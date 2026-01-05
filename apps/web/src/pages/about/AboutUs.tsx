@@ -91,7 +91,7 @@ export const AboutUs = () => {
         <Card className="p-6 lg:p-8">
           <div className="flex items-center gap-3 mb-6">
             <Coffee className="text-[#6F4E37]" size={28} />
-            <h3 className="text-2xl font-black">What We Do</h3>
+            <h3 className="text-2xl font-black">What We Do?</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
