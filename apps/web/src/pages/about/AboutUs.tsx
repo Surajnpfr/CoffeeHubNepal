@@ -5,7 +5,7 @@ import logoImage from '@/assets/images/logo.png';
 import surajNepalImage from '@/assets/images/team/SurajNepal.png';
 
 const TEAM_MEMBERS = [
-  { name: "Suraj Nepal", role: "Team Member", image: surajNepalImage },
+  { name: "Suraj Nepal", role: "Nothing", image: surajNepalImage },
   { name: "Sarthak Bhattarai", role: "Strategist", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=SarthakBhattarai" },
   { name: "Siddhant Giri", role: "Front End Developer", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=SiddhantGiri" },
   { name: "Krrish Nyopane", role: "UI/UX Designer", image: "https://api.dicebear.com/7.x/avataaars/svg?seed=KrrishNyopane" },
