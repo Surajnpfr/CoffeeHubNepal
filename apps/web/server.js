@@ -9,9 +9,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Serve static files from the dist directory
-app.use(express.static(join(__dirname, 'dist')));
+app.use(express.static(join(__dirname, 'dist'), {
+  maxAge: '1y', // Cache static assets for 1 year
+  etag: true,
+  lastModified: true
+}));
 
 // Handle React routing, return all requests to React app
+// This must be last to catch all non-static routes
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'), (err) => {
     if (err) {
