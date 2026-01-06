@@ -13,6 +13,7 @@ import SupriyaKhadkaImage from '@/assets/images/team/SupriyaKhadka.png';
 import RajdipJoshiImage from '@/assets/images/team/RajdipJoshi.png';
 import AasthaGaireImage from '@/assets/images/team/AasthaGaire.png';
 import PradipKhanalImage from '@/assets/images/team/PradipKhanal.png';
+import AdityaManShresthaImage from '@/assets/images/team/AdityaManShrestha.png';
 
 const TEAM_MEMBERS = [
   { name: "Suraj Nepal", role: "Nothing", image: surajNepalImage },
@@ -25,7 +26,8 @@ const TEAM_MEMBERS = [
   { name: "Supriya Khadka", role: "App Developer", image: SupriyaKhadkaImage },
   { name: "Rajdip Joshi", role: "App Developer", image: RajdipJoshiImage },
   { name: "Aastha Gaire", role: "Backend Developer", image: AasthaGaireImage },
-  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage }
+  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage },
+  { name: "Aditya Man Shrestha", role: "Researcher", image: AdityaManShresthaImage }
 
   
 ];
