@@ -6,14 +6,14 @@ export const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   
-  // If explicitly set to empty string, use relative URLs (same domain)
-  if (envUrl === '') {
-    return '';
+  // If explicitly set, use it (empty string = relative URLs)
+  if (envUrl !== undefined) {
+    return envUrl;
   }
   
-  // If set to a specific URL, use it
-  if (envUrl) {
-    return envUrl;
+  // Auto-detect production: use relative URLs (assumes same domain deployment)
+  if (import.meta.env.PROD) {
+    return '';
   }
   
   // Default to localhost for development
