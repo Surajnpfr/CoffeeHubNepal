@@ -22,7 +22,7 @@ export const createApp = () => {
   
   // CORS configuration - allow same-origin when serving static files
   const isProduction = process.env.NODE_ENV === 'production';
-  const staticFilesServed = isProduction && process.env.SERVE_STATIC_FILES === 'true';
+  const staticFilesServed = isProduction; // Always serve static files in production
   
   app.use(
     cors({

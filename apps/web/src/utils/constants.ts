@@ -1,9 +1,8 @@
 export const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
 // API URL Configuration:
-// - Set VITE_API_URL in .env for production API endpoint
-// - Use empty string '' for same-domain deployment (relative URLs)
-// - Defaults to localhost:4000 for development
+// - In production (Heroku), frontend and backend are on same domain - use relative URLs
+// - In development, use localhost:4000
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   
@@ -12,9 +11,9 @@ const getApiBaseUrl = () => {
     return envUrl;
   }
   
-  // Production: use VPS API (temporary until Heroku is set up)
+  // Production: use relative URLs (same domain deployment on Heroku)
   if (import.meta.env.PROD) {
-    return 'http://72.61.229.21:4000';
+    return '';
   }
   
   // Default to localhost for development

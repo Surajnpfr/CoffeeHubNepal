@@ -4,21 +4,16 @@
   "description": "CoffeeHubNepal - Coffee Community Platform",
   "type": "module",
   "scripts": {
-    "build": "cd apps/web && npm install --include=dev && npm run build",
-    "start": "cd apps/web && npm start",
+    "build": "npm run heroku-build",
+    "start": "cd apps/api && node dist/server.js",
+    "heroku-build": "cd apps/web && npm install && npm run build && cd ../api && npm install && npm run build && cd ../.. && node scripts/copy-frontend-to-api.js",
+    "dev": "cd apps/web && npm run dev",
     "api:dev": "cd apps/api && npm install && npm run dev",
     "api:test": "cd apps/api && npm install && npm test",
-    "api:build": "cd apps/api && npm install && npm run build",
-    "api:start": "cd apps/api && npm install && npm start",
-    "postinstall": "cd apps/web && npm install --include=dev",
-    "build:deploy": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "node scripts/build-frontend-deploy.js",
-    "build:backend": "cd apps/api && npm run build && node ../../scripts/copy-backend.js",
-    "create:hostinger": "node scripts/create-hostinger-folder.js",
-    "create:nodejs": "npm run build:deploy && node scripts/create-nodejs-deployment.js"
+    "postinstall": "echo 'Dependencies installed'"
   },
   "engines": {
-    "node": "24.x",
+    "node": "20.x",
     "npm": ">=9.0.0"
   }
 }
