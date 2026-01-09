@@ -52,8 +52,14 @@ export const Captcha = ({ onVerify, onError, onExpire }: CaptchaProps) => {
 
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
+  // If no site key is configured, skip captcha and auto-verify
   if (!siteKey) {
-    console.warn('VITE_RECAPTCHA_SITE_KEY is not set in apps/web/.env');
+    // Auto-verify when no captcha is configured (development/optional mode)
+    useEffect(() => {
+      onVerify('captcha-disabled');
+    }, [onVerify]);
+    
+    return null; // Don't render anything
   }
 
   return (

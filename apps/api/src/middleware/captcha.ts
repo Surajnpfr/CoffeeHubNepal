@@ -16,6 +16,11 @@ export const captchaCheck = async (req: Request, res: Response, next: NextFuncti
     return res.status(400).json({ error: 'CAPTCHA_REQUIRED', code: 'CAPTCHA_REQUIRED' });
   }
 
+  // Accept 'captcha-disabled' token when frontend has no site key configured
+  if (token === 'captcha-disabled') {
+    return next();
+  }
+
   try {
     // Verify token with Google reCAPTCHA
     const verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
