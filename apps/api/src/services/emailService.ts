@@ -106,11 +106,16 @@ export const sendPasswordResetEmail = async (email: string, resetToken: string):
     
     if (azureClient) {
       try {
+        // Trim and validate sender address
+        const senderAddress = (env.smtpFrom || '').trim();
+        
         console.log(`[Email Service] Attempting to send password reset email via Azure to ${email}`);
-        console.log(`[Email Service] Using sender address: ${env.smtpFrom}`);
+        console.log(`[Email Service] Raw SMTP_FROM value: "${env.smtpFrom}"`);
+        console.log(`[Email Service] Trimmed sender address: "${senderAddress}"`);
+        console.log(`[Email Service] Sender address length: ${senderAddress.length}`);
         
         const emailMessage = {
-          senderAddress: env.smtpFrom,
+          senderAddress: senderAddress,
           content: {
             subject: 'Reset Your CoffeeHubNepal Password',
             plainText: `
@@ -164,6 +169,8 @@ If you didn't request a password reset, please ignore this email. Your password 
         };
 
         console.log(`[Email Service] Starting Azure email send operation...`);
+        console.log(`[Email Service] Final senderAddress: "${emailMessage.senderAddress}"`);
+        console.log(`[Email Service] Recipient: "${emailMessage.recipients.to[0].address}"`);
         const poller = await azureClient.beginSend(emailMessage);
         console.log(`[Email Service] Polling for email send completion...`);
         const result = await poller.pollUntilDone();
