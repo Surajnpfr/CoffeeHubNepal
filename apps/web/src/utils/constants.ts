@@ -7,13 +7,13 @@ const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
   
   // If explicitly set, use it (empty string = relative URLs)
-  if (envUrl !== undefined) {
+  if (envUrl !== undefined && envUrl !== '') {
     return envUrl;
   }
   
-  // Auto-detect production: use relative URLs (assumes same domain deployment)
+  // Production: use VPS API server
   if (import.meta.env.PROD) {
-    return '';
+    return 'http://72.61.229.21:4000';
   }
   
   // Default to localhost for development
