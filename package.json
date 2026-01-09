@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run heroku-build",
     "start": "cd apps/api && node dist/server.js",
-    "heroku-build": "cd apps/web && npm install && npm run build && cd ../api && npm install && npm run build && cd ../.. && node scripts/copy-frontend-to-api.js",
+    "heroku-build": "cd apps/web && npm install --include=dev && npm run build && cd ../api && npm install --include=dev && npm run build && cd ../.. && node scripts/copy-frontend-to-api.js",
     "dev": "cd apps/web && npm run dev",
     "api:dev": "cd apps/api && npm install && npm run dev",
     "api:test": "cd apps/api && npm install && npm test",
