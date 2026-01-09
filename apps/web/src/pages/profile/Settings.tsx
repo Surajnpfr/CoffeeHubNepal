@@ -3,28 +3,42 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { useApp } from '@/context/AppContext';
-import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect } from 'react';
+import { t } from '@/i18n';
 
 export const Settings = () => {
-  const { setCurrentPage, setSubPage } = useApp();
+  const { setCurrentPage, setSubPage, language, setLanguage } = useApp();
+  const { user, updateUser } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [language, setLanguage] = useState('en');
 
   const [profileData, setProfileData] = useState({
-    name: 'Coffee HUB',
-    email: 'user@coffeehubnepal.com',
-    phone: '+977 9800000000',
-    location: 'Kaski, Nepal'
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || ''
   });
+
+  // Update profile data when user changes
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || user.email?.split('@')[0] || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        location: user.location || ''
+      });
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] pb-32">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 py-4 flex items-center gap-4">
-        <button onClick={() => setCurrentPage('profile')} className="p-2 hover:bg-gray-100 rounded-xl">
+        <button onClick={() => setSubPage(null)} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-lg font-black text-[#6F4E37] flex-1">App Settings</h2>
+        <h2 className="text-lg font-black text-[#6F4E37] flex-1">{t(language, 'settings.title')}</h2>
       </div>
 
       <div className="p-6 space-y-6">
@@ -32,33 +46,51 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <User size={20} className="text-[#6F4E37]" />
-            Profile Information
+            {t(language, 'settings.profileInformation')}
           </h3>
           <div className="space-y-4">
             <Input
-              label="Full Name"
+              label={t(language, 'settings.fullName')}
               value={profileData.name}
               onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
             />
             <Input
               type="email"
-              label="Email"
+              label={t(language, 'settings.email')}
               value={profileData.email}
               onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
             />
             <Input
               type="tel"
-              label="Phone Number"
+              label={t(language, 'settings.phoneNumber')}
               value={profileData.phone}
               onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
             />
             <Input
-              label="Location"
+              label={t(language, 'settings.location')}
               value={profileData.location}
               onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
             />
-            <Button variant="primary" className="w-full">
-              Save Changes
+            <Button 
+              variant="primary" 
+              className="w-full"
+              onClick={() => {
+                // Update user in context and localStorage
+                if (user) {
+                  updateUser({
+                    name: profileData.name,
+                    email: profileData.email,
+                    phone: profileData.phone,
+                    location: profileData.location
+                  });
+                  // Also update localStorage
+                  const updatedUser = { ...user, ...profileData };
+                  localStorage.setItem('user', JSON.stringify(updatedUser));
+                  alert(t(language, 'settings.profileUpdated'));
+                }
+              }}
+            >
+              {t(language, 'settings.saveChanges')}
             </Button>
           </div>
         </Card>
@@ -67,13 +99,13 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <Bell size={20} className="text-[#6F4E37]" />
-            Notifications
+            {t(language, 'settings.notifications')}
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-sm">Push Notifications</p>
-                <p className="text-xs text-gray-500">Receive notifications on your device</p>
+                <p className="font-black text-sm">{t(language, 'settings.pushNotifications')}</p>
+                <p className="text-xs text-gray-500">{t(language, 'settings.pushNotificationsDesc')}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -88,19 +120,19 @@ export const Settings = () => {
             <div className="space-y-2 text-sm">
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="rounded" defaultChecked />
-                <span>New messages</span>
+                <span>{t(language, 'settings.newMessages')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="rounded" defaultChecked />
-                <span>Job opportunities</span>
+                <span>{t(language, 'settings.jobOpportunities')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="rounded" defaultChecked />
-                <span>Price alerts</span>
+                <span>{t(language, 'settings.priceAlerts')}</span>
               </label>
               <label className="flex items-center gap-2">
                 <input type="checkbox" className="rounded" />
-                <span>Marketing emails</span>
+                <span>{t(language, 'settings.marketingEmails')}</span>
               </label>
             </div>
           </div>
@@ -110,26 +142,26 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <Moon size={20} className="text-[#6F4E37]" />
-            Preferences
+            {t(language, 'settings.preferences')}
           </h3>
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-black text-gray-600 mb-2 uppercase tracking-tight">
-                Language
+                {t(language, 'settings.language')}
               </label>
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                onChange={(e) => setLanguage(e.target.value as 'en' | 'ne')}
                 className="w-full bg-white border border-[#EBE3D5] rounded-xl px-4 py-3 outline-none focus:ring-2 ring-[#6F4E37]/10 text-sm"
               >
-                <option value="en">English</option>
-                <option value="ne">नेपाली (Nepali)</option>
+                <option value="en">{t(language, 'settings.languageEnglish')}</option>
+                <option value="ne">{t(language, 'settings.languageNepali')}</option>
               </select>
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-sm">Dark Mode</p>
-                <p className="text-xs text-gray-500">Switch to dark theme</p>
+                <p className="font-black text-sm">{t(language, 'settings.darkMode')}</p>
+                <p className="text-xs text-gray-500">{t(language, 'settings.darkModeDesc')}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -148,17 +180,17 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <Shield size={20} className="text-[#6F4E37]" />
-            Privacy & Security
+            {t(language, 'settings.privacySecurity')}
           </h3>
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start">
-              Change Password
+              {t(language, 'settings.changePassword')}
             </Button>
             <Button variant="outline" className="w-full justify-start">
-              Two-Factor Authentication
+              {t(language, 'settings.twoFactorAuth')}
             </Button>
             <Button variant="outline" className="w-full justify-start">
-              Privacy Settings
+              {t(language, 'settings.privacySettings')}
             </Button>
           </div>
         </Card>
@@ -167,7 +199,7 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <Info size={20} className="text-[#6F4E37]" />
-            Information
+            {t(language, 'settings.information')}
           </h3>
           <div className="space-y-3">
             <Button 
@@ -178,7 +210,7 @@ export const Settings = () => {
                 setSubPage(null);
               }}
             >
-              <Info size={16} /> About Us
+              <Info size={16} /> {t(language, 'nav.about')}
             </Button>
             <Button 
               variant="outline" 
@@ -188,7 +220,7 @@ export const Settings = () => {
                 setSubPage(null);
               }}
             >
-              <MessageCircle size={16} /> Contact Us
+              <MessageCircle size={16} /> {t(language, 'nav.contact')}
             </Button>
             <Button 
               variant="outline" 
@@ -198,7 +230,7 @@ export const Settings = () => {
                 setSubPage(null);
               }}
             >
-              <Info size={16} /> FAQ
+              <Info size={16} /> {t(language, 'nav.faq')}
             </Button>
           </div>
         </Card>
@@ -207,7 +239,7 @@ export const Settings = () => {
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
             <Shield size={20} className="text-[#6F4E37]" />
-            Legal
+            {t(language, 'settings.legal')}
           </h3>
           <div className="space-y-3">
             <Button 
@@ -218,7 +250,7 @@ export const Settings = () => {
                 setSubPage(null);
               }}
             >
-              <Shield size={16} /> Privacy Policy
+              <Shield size={16} /> {t(language, 'nav.privacy')}
             </Button>
             <Button 
               variant="outline" 
@@ -228,47 +260,7 @@ export const Settings = () => {
                 setSubPage(null);
               }}
             >
-              <FileText size={16} /> Terms of Service
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => {
-                setCurrentPage('faq');
-                setSubPage(null);
-              }}
-            >
-              <Info size={16} /> FAQ
-            </Button>
-          </div>
-        </Card>
-
-        {/* Legal */}
-        <Card className="p-6">
-          <h3 className="font-black text-lg mb-4 flex items-center gap-2">
-            <Shield size={20} className="text-[#6F4E37]" />
-            Legal
-          </h3>
-          <div className="space-y-3">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => {
-                setCurrentPage('privacy');
-                setSubPage(null);
-              }}
-            >
-              <Shield size={16} /> Privacy Policy
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => {
-                setCurrentPage('terms');
-                setSubPage(null);
-              }}
-            >
-              <FileText size={16} /> Terms of Service
+              <FileText size={16} /> {t(language, 'nav.terms')}
             </Button>
           </div>
         </Card>
@@ -277,13 +269,13 @@ export const Settings = () => {
         <Card className="p-6 border-red-200">
           <h3 className="font-black text-lg mb-4 text-red-600 flex items-center gap-2">
             <Trash2 size={20} />
-            Danger Zone
+            {t(language, 'settings.dangerZone')}
           </h3>
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start text-red-600 border-red-200">
-              Delete Account
+              {t(language, 'settings.deleteAccount')}
             </Button>
-            <p className="text-xs text-gray-500">This action cannot be undone</p>
+            <p className="text-xs text-gray-500">{t(language, 'settings.deleteAccountWarning')}</p>
           </div>
         </Card>
       </div>

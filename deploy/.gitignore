@@ -1,0 +1,16 @@
+# Deployment folder - ignore built files
+frontend/
+backend/
+node_modules/
+*.log
+.env
+.env.local
+.env.production
+
+# Keep these files
+!.htaccess
+!README.md
+!DEPLOYMENT.md
+!ENV_TEMPLATE.txt
+!package.json
+

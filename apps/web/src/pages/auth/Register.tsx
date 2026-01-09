@@ -3,6 +3,7 @@ import { ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import { LoadingOverlay } from '@/components/common/LoadingOverlay';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import logoImage from '@/assets/images/logo/coffeelogo.png';
@@ -23,7 +24,7 @@ const ROLE_INFO: { [key in UserRole]: { label: string; icon: string; description
 };
 
 export const Register = ({ onBack, onSuccess }: RegisterProps) => {
-  const { navigate, setUserRole } = useApp();
+  const { navigate, setUserRole, setSubPage } = useApp();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -40,6 +41,7 @@ export const Register = ({ onBack, onSuccess }: RegisterProps) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitError, setSubmitError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -114,22 +116,38 @@ export const Register = ({ onBack, onSuccess }: RegisterProps) => {
         role: formData.role
       });
       
+      // Show success message
+      setSuccess(true);
+      setSubmitError('');
+      // Wait a moment to show success message
+      await new Promise(resolve => setTimeout(resolve, 1000));
       // Get user from auth context to set role
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
-        setUserRole(user.role);
+        setUserRole(user.role || formData.role);
       }
+      // Navigate to home page and clear subPage to show main app
+      navigate('home');
+      setSubPage(null);
       onSuccess?.();
     } catch (err: any) {
-      setSubmitError(err.message || 'Registration failed. Please try again.');
+      setSubmitError(err.message || 'Registration failed. Please check your information and try again.');
+      setSuccess(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F5F2] p-6 pb-32 lg:pb-8">
+    <>
+      <LoadingOverlay 
+        isVisible={isLoading} 
+        message="Creating your account..."
+        success={success}
+        successMessage="Account created successfully!"
+      />
+      <div className="min-h-screen bg-[#F8F5F2] p-6 pb-32 lg:pb-8">
       {onBack && (
         <button onClick={onBack} className="mb-6 flex items-center gap-2 text-gray-600 hover:text-[#6F4E37] transition-colors">
           <ArrowLeft size={20} />
@@ -151,10 +169,28 @@ export const Register = ({ onBack, onSuccess }: RegisterProps) => {
         </div>
 
         <Card className="p-6 lg:p-8">
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 animate-in fade-in">
+              <CheckCircle className="text-green-600" size={20} fill="currentColor" />
+              <p className="text-sm text-green-700 font-bold">Account registered successfully! Redirecting...</p>
+            </div>
+          )}
           {submitError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
-              <AlertCircle className="text-red-600" size={20} />
-              <p className="text-sm text-red-700 font-bold">{submitError}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+              <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+              <div className="flex-1">
+                <p className="text-sm text-red-700 font-bold">{submitError}</p>
+                {submitError.toLowerCase().includes('password') && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Password must be at least 8 characters with uppercase, lowercase, and numbers
+                  </p>
+                )}
+                {submitError.toLowerCase().includes('email') && (
+                  <p className="text-xs text-red-600 mt-1">
+                    Please check your email format and try again
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -400,6 +436,7 @@ export const Register = ({ onBack, onSuccess }: RegisterProps) => {
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import type { SupportedLanguage } from '@/i18n';
 
 interface AppContextType {
   currentPage: string;
@@ -11,6 +12,8 @@ interface AppContextType {
   setUserRole: (role: string) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
+  language: SupportedLanguage;
+  setLanguage: (lang: SupportedLanguage) => void;
   navigate: (page: string, id?: number) => void;
 }
 
@@ -22,6 +25,28 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [userRole, setUserRole] = useState('farmer');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [language, setLanguageState] = useState<SupportedLanguage>('en');
+
+  // Initialize language from localStorage once on mount
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('coffeehub_language');
+      if (stored === 'en' || stored === 'ne') {
+        setLanguageState(stored);
+      }
+    } catch {
+      // ignore access errors (e.g., SSR or privacy mode)
+    }
+  }, []);
+
+  const setLanguage = (lang: SupportedLanguage) => {
+    setLanguageState(lang);
+    try {
+      window.localStorage.setItem('coffeehub_language', lang);
+    } catch {
+      // ignore
+    }
+  };
 
   const navigate = (page: string, id?: number) => {
     if (id) {
@@ -45,6 +70,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setUserRole,
       isMenuOpen,
       setIsMenuOpen,
+      language,
+      setLanguage,
       navigate,
     }}>
       {children}

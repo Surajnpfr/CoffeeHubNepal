@@ -2,10 +2,20 @@
   "name": "coffeehubnepal",
   "version": "1.0.0",
   "description": "CoffeeHubNepal - Coffee Community Platform",
+  "type": "module",
   "scripts": {
     "build": "cd apps/web && npm install --include=dev && npm run build",
     "start": "cd apps/web && npm start",
-    "postinstall": "cd apps/web && npm install --include=dev"
+    "api:dev": "cd apps/api && npm install && npm run dev",
+    "api:test": "cd apps/api && npm install && npm test",
+    "api:build": "cd apps/api && npm install && npm run build",
+    "api:start": "cd apps/api && npm install && npm start",
+    "postinstall": "cd apps/web && npm install --include=dev",
+    "build:deploy": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "node scripts/build-frontend-deploy.js",
+    "build:backend": "cd apps/api && npm run build && node ../../scripts/copy-backend.js",
+    "create:hostinger": "node scripts/create-hostinger-folder.js",
+    "create:nodejs": "npm run build:deploy && node scripts/create-nodejs-deployment.js"
   },
   "engines": {
     "node": "24.x",

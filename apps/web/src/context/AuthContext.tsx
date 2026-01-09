@@ -1,13 +1,15 @@
+/* @refresh reset */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, LoginCredentials, RegisterData } from '@/services/auth.service';
 
 export interface User {
   id: number;
+  mongoId?: string; // MongoDB ObjectId as string for backend comparisons
   name: string;
   email: string;
   phone?: string;
   location?: string;
-  role: 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin';
+  role: 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator';
   verified?: boolean;
   memberSince?: string;
 }
@@ -16,7 +18,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials, captchaToken?: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
@@ -54,20 +56,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: LoginCredentials, captchaToken?: string) => {
     try {
       setIsLoading(true);
-      const response: any = await authService.login(credentials);
+      const response: any = await authService.login(credentials, captchaToken);
       
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (response.token && response.user) {
+        // User is already stored in localStorage by authService
         setUser(response.user as User);
       } else {
-        throw new Error('Login failed: No token received');
+        throw new Error('Login failed: No token or user received');
       }
     } catch (error: any) {
       console.error('Login error:', error);
+      // Clear any partial state on error
+      setUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       throw error;
     } finally {
       setIsLoading(false);
@@ -79,15 +84,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       const response: any = await authService.register(data);
       
-      if (response.token) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (response.token && response.user) {
+        // User is already stored in localStorage by authService
         setUser(response.user as User);
       } else {
-        throw new Error('Registration failed: No token received');
+        throw new Error('Registration failed: No token or user received');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
+      // Clear any partial state on error
+      setUser(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       throw error;
     } finally {
       setIsLoading(false);

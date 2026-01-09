@@ -1,11 +1,14 @@
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home, Briefcase } from 'lucide-react';
 import { JobCard } from '@/components/cards/JobCard';
 import { MOCK_JOBS } from '@/utils/mockData';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
+import { t } from '@/i18n';
 
 export const Jobs = () => {
-  const { navigate, setCurrentPage } = useApp();
+  const { navigate, setCurrentPage, language } = useApp();
+  const { isAuthenticated } = useAuth();
   
   const handleJobClick = (id: number) => {
     navigate('job-detail', id);
@@ -22,17 +25,28 @@ export const Jobs = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h2 className="text-3xl font-black">Job Board</h2>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Find Opportunities</p>
+            <h2 className="text-3xl font-black">{t(language, 'jobs.title')}</h2>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t(language, 'jobs.subtitle')}</p>
           </div>
         </div>
-        <Button 
-          variant="outline" 
-          className="p-2 rounded-xl"
-          onClick={() => setCurrentPage('home')}
-        >
-          <Home size={18} />
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAuthenticated && (
+            <Button 
+              variant="outline" 
+              className="text-xs px-3"
+              onClick={() => navigate('my-jobs')}
+            >
+              <Briefcase size={14} /> {t(language, 'jobs.myJobs')}
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            className="p-2 rounded-xl"
+            onClick={() => setCurrentPage('home')}
+          >
+            <Home size={18} />
+          </Button>
+        </div>
       </div>
       <div className="space-y-4">
         {MOCK_JOBS.map(job => (

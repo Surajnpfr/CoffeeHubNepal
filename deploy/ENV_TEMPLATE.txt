@@ -1,0 +1,63 @@
+# CoffeeHubNepal - Environment Variables Template
+# Copy this content to deploy/backend/.env and fill in your actual values
+
+# ============================================
+# Server Configuration
+# ============================================
+PORT=4000
+NODE_ENV=production
+
+# ============================================
+# Database Configuration
+# ============================================
+# MongoDB Connection String
+# Format: mongodb+srv://username:password@cluster.mongodb.net/database
+# Or: mongodb://username:password@host:port/database
+MONGO_URI=
+
+# ============================================
+# Security
+# ============================================
+# Generate a strong random secret (at least 32 characters)
+# You can use: openssl rand -base64 32
+JWT_SECRET=
+
+# ============================================
+# Client Configuration
+# ============================================
+# Your frontend domain (with https://)
+CLIENT_ORIGIN=https://yourdomain.com
+
+# ============================================
+# Rate Limiting
+# ============================================
+RATE_LIMIT_PER_MINUTE=60
+LOCKOUT_THRESHOLD=5
+LOCKOUT_WINDOW_MINUTES=15
+
+# ============================================
+# Email Configuration
+# ============================================
+# Option 1: Gmail SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_specific_password
+SMTP_FROM=noreply@yourdomain.com
+
+# Option 2: Azure Communication Services
+# SMTP_HOST=smtp.azurecomm.net
+# SMTP_PORT=587
+# SMTP_USER=your_azure_endpoint
+# SMTP_PASS=your_azure_key
+
+# ============================================
+# Password Reset
+# ============================================
+RESET_TOKEN_EXPIRY_HOURS=1
+
+# ============================================
+# Optional: CAPTCHA (if using)
+# ============================================
+# CAPTCHA_SECRET=
+

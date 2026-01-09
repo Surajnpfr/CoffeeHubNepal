@@ -1,4 +1,4 @@
-import { Store, MessageSquare, Bell, Briefcase } from 'lucide-react';
+import { Store, Bell, Briefcase, BookOpen } from 'lucide-react';
 
 interface CreateMenuProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
         <div className="grid grid-cols-2 gap-4">
           {[
             { label: "Sell Harvest", icon: Store, color: "bg-green-50 text-green-600", action: "sell" },
-            { label: "Ask Expert", icon: MessageSquare, color: "bg-blue-50 text-blue-600", action: "ask" },
+            { label: "Write Blog", icon: BookOpen, color: "bg-purple-50 text-purple-600", action: "blog" },
             { label: "Post Notice", icon: Bell, color: "bg-red-50 text-red-600", action: "notice" },
             { label: "Post Job", icon: Briefcase, color: "bg-amber-50 text-amber-600", action: "job" }
           ].map((opt, i) => (

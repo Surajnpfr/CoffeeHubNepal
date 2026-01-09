@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 *ACCESS_PHONE.md
 *ICONS_LIST.md
+*.env
+*.env.example

@@ -1,8 +1,13 @@
-import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
-import { MOCK_JOBS } from '@/utils/mockData';
+import { MOCK_JOBS, MOCK_APPLICATIONS } from '@/utils/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { useApp } from '@/context/AppContext';
+import { jobService, Application } from '@/services/job.service';
+import { t } from '@/i18n';
 
 interface JobDetailProps {
   jobId: number;
@@ -11,7 +16,115 @@ interface JobDetailProps {
 }
 
 export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
+  const { user } = useAuth();
+  const { language, setSubPage } = useApp();
   const job = MOCK_JOBS.find(j => j.id === jobId) || MOCK_JOBS[0];
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [processingApp, setProcessingApp] = useState<number | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [applySuccess, setApplySuccess] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+
+  const isJobCreator = user && (user.mongoId === job.createdBy || user.id.toString() === job.createdBy);
+
+  useEffect(() => {
+    if (isJobCreator) {
+      loadApplications();
+    }
+  }, [jobId, isJobCreator]);
+
+  const loadApplications = async () => {
+    setLoading(true);
+    try {
+      // In real app: const apps = await jobService.getApplications(jobId);
+      const apps = MOCK_APPLICATIONS.filter(app => app.jobId === jobId);
+      setApplications(apps);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAccept = async (applicationId: number) => {
+    setProcessingApp(applicationId);
+    try {
+      await jobService.acceptApplication(applicationId);
+      // Update local state
+      setApplications(prev => prev.map(app => 
+        app.id === applicationId ? { ...app, status: 'accepted' as const } : app
+      ));
+    } catch (error) {
+      console.error('Failed to accept application:', error);
+    } finally {
+      setProcessingApp(null);
+    }
+  };
+
+  const handleReject = async (applicationId: number) => {
+    setProcessingApp(applicationId);
+    try {
+      await jobService.rejectApplication(applicationId);
+      // Update local state
+      setApplications(prev => prev.map(app => 
+        app.id === applicationId ? { ...app, status: 'rejected' as const } : app
+      ));
+    } catch (error) {
+      console.error('Failed to reject application:', error);
+    } finally {
+      setProcessingApp(null);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string): 'primary' | 'success' | 'alert' | 'ai' => {
+    switch (status) {
+      case 'accepted': return 'success';
+      case 'rejected': return 'alert';
+      default: return 'primary';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const handleApply = async () => {
+    if (!user) {
+      setApplyError('Please log in to apply for this job');
+      setTimeout(() => {
+        setSubPage('login');
+      }, 1500);
+      return;
+    }
+
+    setApplying(true);
+    setApplyError(null);
+    setApplySuccess(false);
+
+    try {
+      const result = await jobService.applyToJob(jobId, {
+        message: `Application for ${job.title} at ${job.farm}`
+      });
+      
+      if (result.success) {
+        setApplySuccess(true);
+        // Reload applications if user is job creator
+        if (isJobCreator) {
+          loadApplications();
+        }
+        // Call the optional onApply callback if provided
+        onApply?.();
+      } else {
+        setApplyError(result.message || 'Failed to submit application');
+      }
+    } catch (error: any) {
+      setApplyError(error.message || 'Failed to submit application. Please try again.');
+    } finally {
+      setApplying(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] pb-32">
@@ -19,14 +132,14 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-lg font-black text-[#6F4E37]">Job Details</h2>
+        <h2 className="text-lg font-black text-[#6F4E37]">{t(language, 'jobs.jobDetails')}</h2>
       </div>
 
       <div className="p-6 space-y-6">
         <Card className="p-8">
           <div className="flex items-start gap-6 mb-6">
             <div className="w-20 h-20 bg-gradient-to-br from-[#6F4E37] to-[#3A7D44] rounded-3xl flex items-center justify-center text-white font-black text-2xl">
-              CB
+              {job.farm.substring(0, 2).toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -42,7 +155,7 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
             <div className="bg-[#F8F5F2] p-4 rounded-2xl">
               <div className="flex items-center gap-2 text-gray-500 mb-1">
                 <MapPin size={14} />
-                <span className="text-xs font-bold uppercase">Location</span>
+                <span className="text-xs font-bold uppercase">{t(language, 'marketplace.location')}</span>
               </div>
               <p className="font-black text-sm">{job.location}</p>
             </div>
@@ -59,51 +172,37 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
             <div>
               <h3 className="font-black mb-3">Job Description</h3>
               <p className="text-gray-700 leading-relaxed">
-                We are looking for experienced {job.title.toLowerCase()} to join our team at {job.farm}. 
-                This position requires hands-on experience in coffee farming and processing. 
-                The ideal candidate should have at least 2 years of experience in the coffee industry.
+                {job.description || `We are looking for experienced ${job.title.toLowerCase()} to join our team at ${job.farm}. This position requires hands-on experience in coffee farming and processing.`}
               </p>
             </div>
 
-            <div>
-              <h3 className="font-black mb-3">Requirements</h3>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Minimum 2 years of experience in coffee farming</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Physical fitness for field work</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Knowledge of organic farming practices preferred</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Ability to work in team environment</span>
-                </li>
-              </ul>
-            </div>
+            {job.requirements && (
+              <div>
+                <h3 className="font-black mb-3">Requirements</h3>
+                <ul className="space-y-2 text-gray-700">
+                  {job.requirements.split(',').map((req, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-[#3A7D44] mt-1">•</span>
+                      <span>{req.trim()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            <div>
-              <h3 className="font-black mb-3">Benefits</h3>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Competitive salary package</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Accommodation provided</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3A7D44] mt-1">•</span>
-                  <span>Training and skill development opportunities</span>
-                </li>
-              </ul>
-            </div>
+            {job.benefits && (
+              <div>
+                <h3 className="font-black mb-3">Benefits</h3>
+                <ul className="space-y-2 text-gray-700">
+                  {job.benefits.split(',').map((benefit, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-[#3A7D44] mt-1">•</span>
+                      <span>{benefit.trim()}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </Card>
 
@@ -131,16 +230,121 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
           </div>
         </Card>
 
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => window.location.href = 'tel:+9779800000000'}>
-            <Phone size={18} /> Call Now
-          </Button>
-          <Button variant="primary" className="flex-1" onClick={onApply}>
-            Apply Now
-          </Button>
-        </div>
+        {isJobCreator ? (
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-black">{t(language, 'jobs.applications')}</h3>
+              <Badge variant="primary">{applications.length}</Badge>
+            </div>
+            
+            {loading ? (
+              <p className="text-gray-500 text-center py-4">{t(language, 'common.loading')}</p>
+            ) : applications.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">{t(language, 'jobs.noApplications')}</p>
+            ) : (
+              <div className="space-y-4">
+                {applications.map(application => (
+                  <div key={application.id} className="border border-[#EBE3D5] rounded-xl p-4 bg-white">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="w-12 h-12 bg-[#F5EFE6] rounded-xl flex items-center justify-center">
+                          <User size={20} className="text-[#6F4E37]" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-black text-base mb-1">{application.applicantName}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{application.applicantEmail}</p>
+                          {application.applicantPhone && (
+                            <p className="text-xs text-gray-500">{application.applicantPhone}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-2">
+                            {t(language, 'jobs.appliedAt')}: {formatDate(application.appliedAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={getStatusBadgeVariant(application.status)}>
+                        {t(language, `jobs.${application.status}`)}
+                      </Badge>
+                    </div>
+
+                    {application.message && (
+                      <div className="bg-[#F8F5F2] rounded-xl p-3 mb-3">
+                        <p className="text-sm text-gray-700">{application.message}</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      {application.status === 'pending' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-green-600 border-green-600"
+                            onClick={() => handleAccept(application.id)}
+                            disabled={processingApp === application.id}
+                          >
+                            <Check size={14} /> {t(language, 'jobs.accept')}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 text-red-600 border-red-600"
+                            onClick={() => handleReject(application.id)}
+                            disabled={processingApp === application.id}
+                          >
+                            <X size={14} /> {t(language, 'jobs.reject')}
+                          </Button>
+                        </>
+                      )}
+                      {application.applicantPhone && (
+                        <Button
+                          variant="outline"
+                          className="px-3"
+                          onClick={() => window.location.href = `tel:${application.applicantPhone}`}
+                        >
+                          <Phone size={14} />
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        className="px-3"
+                        onClick={() => window.location.href = `mailto:${application.applicantEmail}`}
+                      >
+                        <Mail size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        ) : (
+          <>
+            {applyError && (
+              <Card className="p-4 bg-red-50 border border-red-200">
+                <p className="text-red-600 text-sm">{applyError}</p>
+              </Card>
+            )}
+            {applySuccess && (
+              <Card className="p-4 bg-green-50 border border-green-200">
+                <p className="text-green-600 text-sm font-bold">
+                  {t(language, 'jobs.applicationSubmitted')}
+                </p>
+              </Card>
+            )}
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => window.location.href = 'tel:+9779800000000'}>
+                <Phone size={18} /> {t(language, 'jobs.callNow')}
+              </Button>
+              <Button 
+                variant="primary" 
+                className="flex-1" 
+                onClick={handleApply}
+                disabled={applying || applySuccess}
+              >
+                {applying ? t(language, 'common.loading') : applySuccess ? 'Applied ✓' : t(language, 'jobs.applyNow')}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
-

@@ -1,25 +1,32 @@
-import { Home, MessageSquare, Store, Bell, User, Plus, Briefcase, DollarSign, Calendar, Users } from 'lucide-react';
+import { Calendar, DollarSign, Briefcase } from 'lucide-react'; // Keep these for now - no exact matches
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/common/Button';
+import { Icon } from '@/components/common/Icon';
 import logoImage from '@/assets/images/logo/coffeelogo.png';
+import { t } from '@/i18n';
 
 interface SidebarProps {
   onMenuOpen: () => void;
 }
 
 export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
-  const { currentPage, setCurrentPage } = useApp();
+  const { currentPage, setCurrentPage, language } = useApp();
 
-  const mainTabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'qna', icon: MessageSquare, label: 'Forum' },
-    { id: 'market', icon: Store, label: 'Marketplace' },
-    { id: 'notices', icon: Bell, label: 'Alerts' },
-    { id: 'jobs', icon: Briefcase, label: 'Jobs' },
-    { id: 'prices', icon: DollarSign, label: 'Prices' },
-    { id: 'events', icon: Calendar, label: 'Events' },
-    { id: 'groups', icon: Users, label: 'Groups' },
-    { id: 'profile', icon: User, label: 'Profile' }
+  const mainTabs: Array<{
+    id: string;
+    iconName?: string;
+    icon?: React.ComponentType<any>;
+    label: string;
+  }> = [
+    { id: 'home', iconName: 'Sidebar_Home_20', label: t(language, 'nav.home') },
+    { id: 'blog', iconName: 'Sidebar_MessageSquare_20', label: t(language, 'nav.blog') },
+    { id: 'market', iconName: 'Sidebar_Store_20', label: t(language, 'nav.market') },
+    { id: 'notices', iconName: 'Sidebar_Bell_20', label: t(language, 'nav.alerts') },
+    { id: 'jobs', icon: Briefcase, label: t(language, 'nav.jobs') }, // Using lucide for now
+    { id: 'prices', icon: DollarSign, label: t(language, 'nav.prices') }, // Using lucide for now
+    { id: 'events', icon: Calendar, label: t(language, 'nav.events') }, // Using lucide for now
+    { id: 'groups', iconName: 'Sidebar_User_20', label: t(language, 'nav.groups') }, // Using User icon as placeholder
+    { id: 'profile', iconName: 'Sidebar_User_20', label: t(language, 'nav.profile') }
   ];
 
   return (
@@ -47,7 +54,7 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
           className="w-full"
           onClick={onMenuOpen}
         >
-          <Plus size={18} /> Create New
+          <Icon name="Sidebar_Create_Plus_18" size={18} /> {t(language, 'nav.createNew')}
         </Button>
       </div>
 
@@ -64,7 +71,11 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
                   : 'text-coffee-dark/70 border-transparent hover:bg-white/50 hover:border-coffee-dark/20 font-body font-medium'
               }`}
             >
-              <tab.icon size={20} />
+              {tab.iconName ? (
+                <Icon name={tab.iconName} size={20} />
+              ) : (
+                tab.icon && <tab.icon size={20} />
+              )}
               <span className="text-sm">{tab.label}</span>
             </button>
           ))}
@@ -74,13 +85,13 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
       {/* Footer */}
       <div className="p-4 border-t border-coffee-dark/20 space-y-2">
         <div className="bg-white/60 rounded-md border border-coffee-dark/20 p-4 text-center">
-          <p className="text-xs font-heading font-semibold text-coffee-dark mb-2">Need Help?</p>
+          <p className="text-xs font-heading font-semibold text-coffee-dark mb-2">{t(language, 'nav.needHelp')}</p>
           <Button 
             variant="outline" 
             className="w-full text-xs py-2"
             onClick={() => setCurrentPage('contact')}
           >
-            Contact Support
+            {t(language, 'nav.contactSupport')}
           </Button>
         </div>
         <div className="space-y-1">
@@ -88,13 +99,13 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
             onClick={() => setCurrentPage('about')}
             className="w-full text-left px-3 py-2 text-xs text-coffee-dark/70 hover:bg-white/50 rounded-md border border-transparent hover:border-coffee-dark/20 transition-colors"
           >
-            About Us
+            {t(language, 'nav.about')}
           </button>
           <button
             onClick={() => setCurrentPage('contact')}
             className="w-full text-left px-3 py-2 text-xs text-coffee-dark/70 hover:bg-white/50 rounded-md border border-transparent hover:border-coffee-dark/20 transition-colors"
           >
-            Contact Us
+            {t(language, 'nav.contact')}
           </button>
         </div>
       </div>

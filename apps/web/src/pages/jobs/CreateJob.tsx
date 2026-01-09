@@ -3,6 +3,10 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import { useAuth } from '@/context/AuthContext';
+import { jobService } from '@/services/job.service';
+import { useApp } from '@/context/AppContext';
+import { t } from '@/i18n';
 
 interface CreateJobProps {
   onBack: () => void;
@@ -10,6 +14,8 @@ interface CreateJobProps {
 }
 
 export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
+  const { user } = useAuth();
+  const { language } = useApp();
   const [formData, setFormData] = useState({
     title: '',
     farm: '',
@@ -20,13 +26,35 @@ export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
     requirements: '',
     benefits: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const jobTypes = ['Full-time', 'Part-time', 'Seasonal', 'Contract'];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(formData);
-    onBack();
+    if (!user?.id && !user?.mongoId) {
+      setError('Please log in to post a job');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const jobData = {
+        ...formData,
+        createdBy: user.mongoId || user.id.toString()
+      };
+      
+      const createdJob = await jobService.createJob(jobData);
+      onSubmit?.(createdJob);
+      onBack();
+    } catch (err: any) {
+      setError(err.message || 'Failed to create job');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,11 +63,16 @@ export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-lg font-black text-[#6F4E37]">Post Job</h2>
+        <h2 className="text-lg font-black text-[#6F4E37]">{t(language, 'jobs.postJob')}</h2>
       </div>
 
       <div className="p-6">
         <Card className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               type="text"
@@ -135,10 +168,10 @@ export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
 
             <div className="flex gap-3">
               <Button variant="outline" type="button" onClick={onBack} className="flex-1">
-                Cancel
+                {t(language, 'jobs.cancel')}
               </Button>
-              <Button variant="primary" type="submit" className="flex-1">
-                <Send size={16} /> Post Job
+              <Button variant="primary" type="submit" className="flex-1" disabled={loading}>
+                <Send size={16} /> {loading ? t(language, 'common.loading') : t(language, 'jobs.postJob')}
               </Button>
             </div>
           </form>

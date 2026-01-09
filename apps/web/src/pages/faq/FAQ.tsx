@@ -64,7 +64,7 @@ const FAQ_CATEGORIES = [
     questions: [
       {
         q: 'How do I ask a question?',
-        a: 'Click the "+" button and select "Ask Expert", or go to the Forum page and click "Ask Question". Write your question, add relevant tags, and the community or our experts will respond.'
+        a: 'Click the "+" button and select "Write Blog" to share your knowledge and experiences with the community. You can also browse existing blog posts to learn from others.'
       },
       {
         q: 'Can I use AI to get instant answers?',

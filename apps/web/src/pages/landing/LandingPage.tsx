@@ -1,4 +1,4 @@
-import { ArrowRight, Users, TrendingUp, Shield, MessageSquare, Store, Briefcase, CheckCircle, Coffee, Leaf, Award } from 'lucide-react';
+import { ArrowRight, Users, TrendingUp, Shield, Store, Briefcase, CheckCircle, Coffee, Leaf, Award } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -31,13 +31,6 @@ export const LandingPage = () => {
       description: 'Real-time market prices and analytics for informed decisions',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
-    },
-    {
-      icon: MessageSquare,
-      title: 'Community Forum',
-      description: 'Ask questions, share knowledge, and connect with experts',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
     },
     {
       icon: Shield,
@@ -424,7 +417,7 @@ export const LandingPage = () => {
               <h4 className="font-heading font-semibold text-sm mb-4 text-coffee-dark">Platform</h4>
               <ul className="space-y-2 text-xs font-body text-coffee-dark/70">
                 <li><button onClick={() => navigate('market')} className="hover:text-coffee-dark transition-colors">Marketplace</button></li>
-                <li><button onClick={() => navigate('qna')} className="hover:text-coffee-dark transition-colors">Community Forum</button></li>
+                <li><button onClick={() => navigate('blog')} className="hover:text-coffee-dark transition-colors">Blog</button></li>
                 <li><button onClick={() => navigate('jobs')} className="hover:text-coffee-dark transition-colors">Job Board</button></li>
                 <li><button onClick={() => navigate('prices')} className="hover:text-coffee-dark transition-colors">Price Board</button></li>
               </ul>

@@ -106,7 +106,7 @@ export const AboutUs = () => {
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-[#6F4E37] rounded-full mt-2"></div>
-              <p className="text-gray-700">Facilitate knowledge sharing through Q&A forums</p>
+              <p className="text-gray-700">Facilitate knowledge sharing through blog posts and community discussions</p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-2 h-2 bg-[#6F4E37] rounded-full mt-2"></div>

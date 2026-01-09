@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { t } from './i18n';
 import { Header } from './components/layout/Header';
 import { DesktopHeader } from './components/layout/DesktopHeader';
 import { Sidebar } from './components/layout/Sidebar';
@@ -12,9 +13,10 @@ import { Marketplace } from './pages/marketplace/Marketplace';
 import { Jobs } from './pages/jobs/Jobs';
 import { Profile } from './pages/profile/Profile';
 import { Notices } from './pages/notices/Notices';
-import { QnaList } from './pages/qna/QnaList';
-import { QnaDetail } from './pages/qna/QnaDetail';
-import { AskQuestion } from './pages/qna/AskQuestion';
+import { BlogList } from './pages/blog/BlogList';
+import { BlogDetail } from './pages/blog/BlogDetail';
+import { CreateBlog } from './pages/blog/CreateBlog';
+import { EditBlog } from './pages/blog/EditBlog';
 import { CreateListing } from './pages/marketplace/CreateListing';
 import { NoticeDetail } from './pages/notices/NoticeDetail';
 import { CreateNotice } from './pages/notices/CreateNotice';
@@ -28,10 +30,14 @@ import { GroupDetail } from './pages/groups/GroupDetail';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { FarmerVerification } from './pages/auth/FarmerVerification';
+import { ForgotPassword } from './pages/auth/ForgotPassword';
+import { ResetPassword } from './pages/auth/ResetPassword';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Verifications } from './pages/admin/Verifications';
 import { Reports } from './pages/admin/Reports';
+import { Users } from './pages/admin/Users';
 import { MyListings } from './pages/profile/MyListings';
+import { MyJobs } from './pages/jobs/MyJobs';
 import { Certifications } from './pages/profile/Certifications';
 import { Settings } from './pages/profile/Settings';
 import { AboutUs } from './pages/about/AboutUs';
@@ -42,7 +48,7 @@ import { TermsOfService } from './pages/legal/TermsOfService';
 import { LandingPage } from './pages/landing/LandingPage';
 
 const AppContent = () => {
-  const { currentPage, setCurrentPage, subPage, setSubPage, selectedId, setSelectedId, isMenuOpen, setIsMenuOpen, navigate, setUserRole } = useApp();
+  const { currentPage, setCurrentPage, subPage, setSubPage, selectedId, setSelectedId, isMenuOpen, setIsMenuOpen, navigate, setUserRole, language } = useApp();
   const { user, isAuthenticated, isLoading } = useAuth();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
@@ -53,20 +59,35 @@ const AppContent = () => {
     }
   }, [user, setUserRole]);
 
+  // Handle URL-based navigation for reset password (from email links)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    
+    // Check if URL has reset-password path or token parameter
+    if (token || window.location.pathname.includes('reset-password')) {
+      setSubPage('reset-password');
+      // Store token in sessionStorage so ResetPassword component can access it
+      if (token) {
+        sessionStorage.setItem('resetPasswordToken', token);
+      }
+    }
+  }, [setSubPage]);
+
   const handleMenuSelect = (option: string) => {
     setIsMenuOpen(false);
     switch (option) {
       case 'sell':
         navigate('create-listing');
         break;
-      case 'ask':
-        navigate('ask-question');
-        break;
       case 'notice':
         navigate('create-notice');
         break;
       case 'job':
         navigate('create-job');
+        break;
+      case 'blog':
+        navigate('create-blog');
         break;
     }
   };
@@ -82,7 +103,7 @@ const AppContent = () => {
       <div className="min-h-screen bg-[#F8F5F2] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#6F4E37] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 font-bold">Loading...</p>
+          <p className="text-gray-600 font-bold">{t(language, 'common.loading')}</p>
         </div>
       </div>
     );
@@ -91,6 +112,11 @@ const AppContent = () => {
   // Landing page (show when not authenticated and on home)
   if (currentPage === 'home' && !isAuthenticated && !subPage) {
     return <LandingPage />;
+  }
+
+  // Redirect authenticated users from landing to home content
+  if (currentPage === 'home' && isAuthenticated && !subPage) {
+    // Will fall through to render Home component below
   }
 
   // Auth pages (always full screen)
@@ -103,21 +129,54 @@ const AppContent = () => {
   if (subPage === 'verification') {
     return <FarmerVerification onBack={handleBack} onSuccess={() => setSubPage(null)} />;
   }
+  if (subPage === 'forgot-password') {
+    return <ForgotPassword onBack={handleBack} />;
+  }
+  if (subPage === 'reset-password') {
+    return <ResetPassword onBack={handleBack} />;
+  }
 
-  // Admin pages
+  // Admin pages - only accessible to admins and moderators
   if (currentPage === 'admin') {
+    // Check if user is authenticated and has admin/moderator role
+    if (!isAuthenticated) {
+      setCurrentPage('home');
+      setSubPage('login');
+      return null;
+    }
+    
+    const userRole = user?.role;
+    if (userRole !== 'admin' && userRole !== 'moderator') {
+      // Redirect non-admin/moderator users away from admin panel
+      setCurrentPage('home');
+      setSubPage(null);
+      return null;
+    }
+    
     if (subPage === 'verifications') return <Verifications />;
     if (subPage === 'reports') return <Reports />;
+    if (subPage === 'users') return <Users />;
     return <Dashboard />;
   }
 
   // Render sub-page content
   const renderSubPage = () => {
-    if (subPage === 'qna-detail' && selectedId) {
-      return <QnaDetail questionId={selectedId} onBack={handleBack} />;
+    if (subPage === 'blog-detail') {
+      // Get postId from sessionStorage (blog posts use string IDs)
+      const postId = sessionStorage.getItem('blogDetailId') || (selectedId ? selectedId.toString() : '');
+      if (postId) {
+        return <BlogDetail postId={postId} onBack={handleBack} />;
+      }
     }
-    if (subPage === 'ask-question') {
-      return <AskQuestion onBack={handleBack} />;
+    if (subPage === 'create-blog') {
+      return <CreateBlog />;
+    }
+    if (subPage === 'edit-blog') {
+      // Get postId from sessionStorage (blog posts use string IDs)
+      const postId = sessionStorage.getItem('blogEditId') || (selectedId ? selectedId.toString() : '');
+      if (postId) {
+        return <EditBlog postId={postId} onBack={handleBack} />;
+      }
     }
     if (subPage === 'create-listing') {
       return <CreateListing onBack={handleBack} />;
@@ -142,6 +201,9 @@ const AppContent = () => {
     }
     if (subPage === 'my-listings') {
       return <MyListings />;
+    }
+    if (subPage === 'my-jobs') {
+      return <MyJobs />;
     }
     if (subPage === 'certifications') {
       return <Certifications />;
@@ -206,7 +268,7 @@ const AppContent = () => {
               {currentPage === 'jobs' && <Jobs />}
               {currentPage === 'profile' && <Profile />}
               {currentPage === 'notices' && <Notices />}
-              {currentPage === 'qna' && <QnaList />}
+              {currentPage === 'blog' && <BlogList />}
               {currentPage === 'prices' && <PriceBoard />}
               {currentPage === 'events' && <Events />}
               {currentPage === 'groups' && <Groups />}
@@ -256,7 +318,7 @@ const AppContent = () => {
         {currentPage === 'jobs' && <Jobs />}
         {currentPage === 'profile' && <Profile />}
         {currentPage === 'notices' && <Notices />}
-        {currentPage === 'qna' && <QnaList />}
+        {currentPage === 'blog' && <BlogList />}
         {currentPage === 'prices' && <PriceBoard />}
         {currentPage === 'events' && <Events />}
         {currentPage === 'groups' && <Groups />}

@@ -1,4 +1,6 @@
-import { Home, MessageSquare, Store, Bell, User, Plus } from 'lucide-react';
+import { useApp } from '@/context/AppContext';
+import { t } from '@/i18n';
+import { Icon } from '@/components/common/Icon';
 
 interface BottomNavProps {
   currentPage: string;
@@ -7,12 +9,14 @@ interface BottomNavProps {
 }
 
 export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavProps) => {
+  const { language } = useApp();
+  
   const tabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'qna', icon: MessageSquare, label: 'Forum' },
-    { id: 'market', icon: Store, label: 'Market' },
-    { id: 'notices', icon: Bell, label: 'Alerts' },
-    { id: 'profile', icon: User, label: 'Profile' }
+    { id: 'home', iconName: 'BottomNav_Home_22', label: t(language, 'nav.home') },
+    { id: 'blog', iconName: 'BottomNav_MessageSquare_22', label: t(language, 'nav.blog') },
+    { id: 'market', iconName: 'BottomNav_Store_22', label: t(language, 'nav.marketShort') },
+    { id: 'notices', iconName: 'BottomNav_Bell_22', label: t(language, 'nav.alerts') },
+    { id: 'profile', iconName: 'BottomNav_User_22', label: t(language, 'nav.profile') }
   ];
 
   return (
@@ -26,16 +30,16 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
                 {/* + Button above Market tab */}
                 <button 
                   onClick={onMenuOpen}
-                  className="absolute -top-10 w-14 h-14 bg-coffee-dark text-white rounded-md border-2 border-coffee-dark active:scale-95 transition-all z-10"
+                  className="absolute -top-10 w-14 h-14 bg-coffee-dark text-white rounded-md border-2 border-coffee-dark active:scale-95 transition-all z-10 flex items-center justify-center"
                 >
-                  <Plus size={32} />
+                  <Icon name="BottomNav_Plus_32" size={32} />
                 </button>
                 {/* Market tab */}
                 <button 
                   onClick={() => onPageChange(tab.id)}
                   className={`flex flex-col items-center gap-1 transition-all mt-8 ${currentPage === tab.id ? 'text-coffee-dark scale-110' : 'text-coffee-dark/60 hover:text-coffee-dark'}`}
                 >
-                  <tab.icon size={22} />
+                  <Icon name={tab.iconName} size={22} />
                   <span className="text-[9px] font-body font-semibold uppercase tracking-tighter">{tab.label}</span>
                 </button>
               </div>
@@ -48,7 +52,7 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
               onClick={() => onPageChange(tab.id)}
               className={`flex flex-col items-center gap-1 transition-all ${currentPage === tab.id ? 'text-coffee-dark scale-110' : 'text-coffee-dark/60 hover:text-coffee-dark'}`}
             >
-              <tab.icon size={22} />
+              <Icon name={tab.iconName} size={22} />
               <span className="text-[9px] font-body font-semibold uppercase tracking-tighter">{tab.label}</span>
             </button>
           );

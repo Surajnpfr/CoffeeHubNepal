@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/utils/constants';
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -12,98 +14,168 @@ export interface RegisterData {
   role: 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert';
 }
 
+interface ApiError {
+  error: string;
+  code?: string;
+  remainingAttempts?: number;
+  unlocksInMs?: number;
+}
+
 export const authService = {
-  async login(credentials: LoginCredentials) {
-    // TODO: Replace with actual API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock validation
-        if (!credentials.email || !credentials.password) {
-          reject(new Error('Email and password are required'));
-          return;
-        }
+  async login(credentials: LoginCredentials, captchaToken?: string) {
+    try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
 
-        // Mock user database
-        const mockUsers: { [key: string]: { password: string; user: any } } = {
-          'farmer@coffeehubnepal.com': {
-            password: 'farmer123',
-            user: {
-              id: 1,
-              name: 'Ram Thapa',
-              email: 'farmer@coffeehubnepal.com',
-              phone: '+977 9800000000',
-              location: 'Kaski, Nepal',
-              role: 'farmer',
-              verified: true,
-              memberSince: '2022'
-            }
-          },
-          'roaster@coffeehubnepal.com': {
-            password: 'roaster123',
-            user: {
-              id: 2,
-              name: 'Sita Adhikari',
-              email: 'roaster@coffeehubnepal.com',
-              phone: '+977 9800000001',
-              location: 'Kathmandu, Nepal',
-              role: 'roaster',
-              verified: true,
-              memberSince: '2023'
-            }
-          }
-        };
+      // Add CAPTCHA token to headers if provided
+      if (captchaToken) {
+        headers['x-captcha-token'] = captchaToken;
+      }
 
-        const userData = mockUsers[credentials.email.toLowerCase()];
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const error: ApiError = data;
+        console.error('Login API error:', error);
+        console.error('Response status:', response.status);
+        console.error('Error object:', JSON.stringify(error, null, 2));
         
-        if (userData && userData.password === credentials.password) {
-          const token = `mock-jwt-token-${Date.now()}`;
-          resolve({
-            token,
-            user: userData.user
-          });
-        } else {
-          reject(new Error('Invalid email or password'));
+        if (error.code === 'ACCOUNT_LOCKED') {
+          const minutes = error.unlocksInMs ? Math.ceil(error.unlocksInMs / 60000) : 15;
+          if (minutes > 0) {
+            throw new Error(`Your account has been temporarily locked due to multiple failed login attempts. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`);
+          } else {
+            throw new Error('Your account has been temporarily locked due to multiple failed login attempts. Please try again in a few minutes.');
+          }
         }
-      }, 1000);
-    });
+        if (error.code === 'CAPTCHA_REQUIRED') {
+          throw new Error('CAPTCHA verification is required. Please complete the CAPTCHA.');
+        }
+        if (error.code === 'CAPTCHA_INVALID' || error.code === 'CAPTCHA_VERIFICATION_FAILED') {
+          throw new Error('CAPTCHA verification failed. Please try again.');
+        }
+        if (error.code === 'INVALID_CREDENTIALS' || response.status === 401) {
+          const attempts = error.remainingAttempts !== undefined ? error.remainingAttempts : 0;
+          if (attempts > 0) {
+            throw new Error(`Invalid email or password. ${attempts} attempt${attempts > 1 ? 's' : ''} remaining before account lockout.`);
+          } else {
+            throw new Error('Invalid email or password. Please check your credentials and try again.');
+          }
+        }
+        // Handle other error codes
+        if (error.error) {
+          throw new Error(error.error);
+        }
+        // Fallback for any 401/403 errors
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('Invalid email or password. Please check your credentials and try again.');
+        }
+        throw new Error('Login failed. Please check your credentials and try again.');
+      }
+
+      // Store token and user
+      // Backend returns full user data including role, name, etc.
+      // MongoDB ID is a string, convert to number for frontend compatibility
+      // Also store original MongoDB ID as string for backend comparisons
+      const mongoId = typeof data.user.id === 'string' ? data.user.id : data.user.id?.toString();
+      const userId = typeof data.user.id === 'string' ? parseInt(data.user.id, 16) || Date.now() : data.user.id;
+      const userWithDefaults = {
+        id: userId,
+        mongoId: mongoId,
+        email: data.user.email,
+        name: data.user.name || data.user.email.split('@')[0] || 'User',
+        role: (data.user.role || 'farmer') as 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator',
+        phone: data.user.phone || '',
+        location: data.user.location || '',
+        verified: data.user.verified || false,
+        memberSince: new Date().getFullYear().toString()
+      };
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(userWithDefaults));
+
+      return {
+        token: data.token,
+        user: userWithDefaults,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error. Please check if the API server is running.');
+    }
   },
 
   async register(data: RegisterData) {
-    // TODO: Replace with actual API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock validation
-        if (!data.email || !data.password || !data.name) {
-          reject(new Error('All fields are required'));
-          return;
-        }
-
-        // Check if user already exists (mock)
-        const existingUsers = ['farmer@coffeehubnepal.com', 'roaster@coffeehubnepal.com'];
-        if (existingUsers.includes(data.email.toLowerCase())) {
-          reject(new Error('Email already registered'));
-          return;
-        }
-
-        // Create new user
-        const newUser = {
-          id: Date.now(),
-          name: data.name,
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           email: data.email,
-          phone: data.phone,
-          location: data.location,
-          role: data.role,
-          verified: false,
-          memberSince: new Date().getFullYear().toString()
-        };
+          password: data.password,
+        }),
+      });
 
-        const token = `mock-jwt-token-${Date.now()}`;
-        resolve({
-          token,
-          user: newUser
-        });
-      }, 1500);
-    });
+      const result = await response.json();
+
+      if (!response.ok) {
+        const error: ApiError = result;
+        if (error.code === 'EMAIL_IN_USE') {
+          throw new Error('This email is already registered. Please use a different email or try logging in instead.');
+        }
+        if (error.code === 'WEAK_PASSWORD') {
+          throw new Error('Password must be at least 8 characters long and include uppercase letters, lowercase letters, and numbers.');
+        }
+        if (error.code === 'VALIDATION_ERROR') {
+          throw new Error('Please check your information and try again. Make sure your email is valid and password meets the requirements.');
+        }
+        throw new Error(error.error || 'Registration failed. Please try again.');
+      }
+
+      // Store token and user
+      // Backend returns full user data including role, name, etc.
+      // MongoDB ID is a string, convert to number for frontend compatibility
+      // Also store original MongoDB ID as string for backend comparisons
+      const mongoId = typeof result.user.id === 'string' ? result.user.id : result.user.id?.toString();
+      const userId = typeof result.user.id === 'string' ? parseInt(result.user.id, 16) || Date.now() : result.user.id;
+      const userWithDefaults = {
+        id: userId,
+        mongoId: mongoId,
+        email: result.user.email,
+        name: result.user.name || data.name || result.user.email.split('@')[0] || 'User', // Use name from backend or registration
+        phone: result.user.phone || data.phone || '',
+        location: result.user.location || data.location || '',
+        role: (result.user.role || data.role || 'farmer') as 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator', // Use role from backend or registration
+        verified: result.user.verified || false,
+        memberSince: new Date().getFullYear().toString()
+      };
+      
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(userWithDefaults));
+
+      return {
+        token: result.token,
+        user: userWithDefaults,
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error. Please check if the API server is running.');
+    }
   },
 
   async logout() {
@@ -128,6 +200,65 @@ export const authService = {
     }
     
     return null;
+  },
+
+  async forgotPassword(email: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Too many requests. Please try again later.');
+        }
+        throw new Error(data.message || data.error || 'Failed to send password reset email');
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error. Please check if the API server is running.');
+    }
+  },
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token, password: newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error(data.message || data.error || 'Invalid or expired reset link');
+        }
+        if (response.status === 429) {
+          throw new Error('Too many requests. Please try again later.');
+        }
+        throw new Error(data.message || data.error || 'Failed to reset password');
+      }
+
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error. Please check if the API server is running.');
+    }
   }
 };
 

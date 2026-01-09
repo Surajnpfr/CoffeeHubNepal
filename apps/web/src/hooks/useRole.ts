@@ -1,4 +1,4 @@
-import { useAuth } from './useAuth';
+import { useAuth } from '@/context/AuthContext';
 
 export const useRole = () => {
   const { user } = useAuth();
@@ -9,7 +9,7 @@ export const useRole = () => {
   const isTrader = user?.role === 'trader';
 
   const hasRole = (role: string) => user?.role === role;
-  const hasAnyRole = (roles: string[]) => roles.includes(user?.role);
+  const hasAnyRole = (roles: string[]) => user?.role ? roles.includes(user.role) : false;
 
   return {
     isAdmin,
