@@ -17,22 +17,45 @@ export const createProduct = async (userId: string, sellerName: string, sellerEm
     throw new Error('Invalid user ID');
   }
 
+  console.log('[ProductService] Creating product with data:', {
+    userId,
+    sellerName,
+    sellerEmail,
+    title: data.title,
+    price: data.price,
+    quantity: data.quantity,
+    category: data.category
+  });
+
   // Get user verification status
   const { User } = await import('../models/User.js');
   const user = await User.findById(userId).lean();
   const verified = user?.verified || false;
 
-  const product = new Product({
-    ...data,
-    sellerId: new mongoose.Types.ObjectId(userId),
-    sellerName,
-    sellerEmail,
-    verified,
-    active: true,
-    sold: false
-  });
+  console.log('[ProductService] User verification status:', verified);
 
-  return await product.save();
+  try {
+    const product = new Product({
+      ...data,
+      sellerId: new mongoose.Types.ObjectId(userId),
+      sellerName,
+      sellerEmail,
+      verified,
+      active: true,
+      sold: false
+    });
+
+    const savedProduct = await product.save();
+    console.log('[ProductService] Product saved successfully:', savedProduct._id);
+    return savedProduct;
+  } catch (error: any) {
+    console.error('[ProductService] Error saving product:', error);
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map((err: any) => err.message);
+      throw new Error(`Validation error: ${errors.join(', ')}`);
+    }
+    throw error;
+  }
 };
 
 export const getProducts = async (filters?: {

@@ -167,7 +167,9 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
         images: formData.images
       };
 
+      console.log('[CreateListing] Submitting listing data:', listingData);
       const result = await marketplaceService.createListing(listingData);
+      console.log('[CreateListing] Listing created successfully:', result);
       
       // Call optional onSubmit callback if provided
       onSubmit?.(result);

@@ -75,19 +75,34 @@ export const marketplaceService = {
   },
 
   async createListing(data: Omit<Listing, '_id' | 'id' | 'createdAt' | 'user' | 'sellerName' | 'verified'>): Promise<Listing> {
-    const response = await fetch(`${API_BASE_URL}/products`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
+      if (!response.ok) {
+        let errorMessage = 'Failed to create listing';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || errorMessage;
+        } catch (e) {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const product = await response.json();
+      return { ...product, id: product._id, user: product.sellerName };
+    } catch (error: any) {
+      // Re-throw with more context if it's not already an Error
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error(error.message || 'Failed to create listing');
     }
-
-    const product = await response.json();
-    return { ...product, id: product._id, user: product.sellerName };
   },
 
   async updateListing(id: string, data: Partial<Listing>): Promise<Listing> {

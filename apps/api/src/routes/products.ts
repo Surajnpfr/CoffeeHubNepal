@@ -63,19 +63,27 @@ router.get('/:id', async (req, res) => {
 // Create product (auth required)
 router.post('/', authenticate, validate(createProductSchema), async (req: AuthRequest, res) => {
   try {
+    console.log('[Products] Creating product for user:', req.userId);
+    console.log('[Products] Product data:', JSON.stringify(req.body, null, 2));
+    
     const { User } = await import('../models/User.js');
     const user = await User.findById(req.userId).lean();
     
     if (!user) {
-      return res.status(401).json({ error: 'USER_NOT_FOUND' });
+      console.error('[Products] User not found:', req.userId);
+      return res.status(401).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
     }
 
+    console.log('[Products] User found:', user.email);
+    
     const product = await createProduct(
       req.userId!,
       user.name || 'User',
       req.userEmail!,
       req.body
     );
+    
+    console.log('[Products] Product created successfully:', product._id);
     
     // Convert to plain object with string IDs
     const productObj = product.toObject();
@@ -86,7 +94,26 @@ router.post('/', authenticate, validate(createProductSchema), async (req: AuthRe
       sellerId: productObj.sellerId.toString()
     });
   } catch (error: any) {
-    console.error('Create product error:', error);
+    console.error('[Products] Create product error:', error);
+    console.error('[Products] Error stack:', error.stack);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: 'VALIDATION_ERROR',
+        message: error.message || 'Invalid product data'
+      });
+    }
+    
+    // Handle Zod validation errors (from middleware)
+    if (error.errors) {
+      return res.status(400).json({ 
+        error: 'VALIDATION_ERROR',
+        message: 'Invalid product data',
+        details: error.errors
+      });
+    }
+    
     return res.status(500).json({ 
       error: 'FAILED_TO_CREATE_PRODUCT',
       message: error.message || 'Failed to create product'
