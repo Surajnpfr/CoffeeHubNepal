@@ -5,6 +5,7 @@ import { Button } from '@/components/common/Button';
 import { priceService, Price } from '@/services/price.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { compressImage } from '@/utils/imageCompression';
 import { t } from '@/i18n';
 
 export const Prices = () => {
@@ -63,9 +64,10 @@ export const Prices = () => {
     setEditImage('');
   };
 
-  const handleImageUpload = (file: File, setImage: (img: string) => void) => {
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Image size must be less than 2MB');
+  const handleImageUpload = async (file: File, setImage: (img: string) => void) => {
+    // Allow larger files before compression (up to 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image size must be less than 10MB');
       return;
     }
 
@@ -74,21 +76,29 @@ export const Prices = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setImage(base64String);
-    };
-    reader.onerror = () => {
-      setError('Failed to read image file');
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Compress image (800x800 max for price images, quality 0.75)
+      const compressedDataUrl = await compressImage(file, 800, 800, 0.75);
+      
+      // Check final base64 size (max ~600KB per price image)
+      const base64Size = (compressedDataUrl.length * 3) / 4;
+      if (base64Size > 600 * 1024) {
+        setError('Image is too large even after compression. Please use a smaller image.');
+        return;
+      }
+      
+      setImage(compressedDataUrl);
+      setError(null);
+    } catch (error: any) {
+      console.error('Image compression error:', error);
+      setError(error.message || 'Failed to process image');
+    }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, setImage: (img: string) => void) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, setImage: (img: string) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleImageUpload(file, setImage);
+      await handleImageUpload(file, setImage);
     }
   };
 

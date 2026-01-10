@@ -223,12 +223,14 @@ router.put(
       const { name, phone, location, avatar } = req.body;
       
       // Validate avatar size if provided (base64 strings are ~33% larger than original)
+      // For Cosmos DB, we need to keep avatars small (~400KB base64 max)
       if (avatar !== undefined && avatar !== null && avatar !== '') {
-        // Base64 string length check (2MB image = ~2.67MB base64)
-        if (avatar.length > 3000000) { // ~2.2MB base64 (roughly 1.65MB image)
+        // Base64 string length check (~400KB base64 = ~300KB image)
+        // Base64 is ~33% larger, so 400KB base64 ≈ 300KB actual
+        if (avatar.length > 550000) { // ~400KB base64 (roughly 300KB image)
           return res.status(400).json({ 
             error: 'AVATAR_TOO_LARGE', 
-            message: 'Image is too large. Please use an image smaller than 2MB.' 
+            message: 'Image is too large. Please use a smaller image (max ~300KB after compression).' 
           });
         }
       }

@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { blogService } from '@/services/blog.service';
 import { authService } from '@/services/auth.service';
+import { compressImage } from '@/utils/imageCompression';
 import { 
   Camera, 
   CheckCircle, 
@@ -116,8 +117,9 @@ export const Profile = () => {
   }, [user?.mongoId, user?.email]);
 
   const handleImageUpload = async (file: File) => {
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image size must be less than 2MB');
+    // Allow larger files before compression (up to 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size must be less than 10MB');
       return;
     }
 
@@ -128,33 +130,35 @@ export const Profile = () => {
 
     setUploadingImage(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        try {
-          const result = await authService.updateProfile({ avatar: base64String });
-          if (result.user) {
-            updateUser(result.user);
-            // Also update localStorage
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-            const updatedUser = { ...currentUser, ...result.user };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-          }
-        } catch (error: any) {
-          console.error('Failed to upload image:', error);
-          alert(error.message || 'Failed to upload image. Please try again.');
-        } finally {
-          setUploadingImage(false);
-        }
-      };
-      reader.onerror = () => {
-        alert('Failed to read image file');
+      // Compress image for avatar (512x512 max, quality 0.7 to keep size small for Cosmos DB)
+      const compressedDataUrl = await compressImage(file, 512, 512, 0.7);
+      
+      // Check final base64 size (max ~400KB to leave room for other user data in Cosmos DB)
+      const base64Size = (compressedDataUrl.length * 3) / 4;
+      if (base64Size > 400 * 1024) {
+        alert('Image is too large even after compression. Please use a smaller image.');
         setUploadingImage(false);
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+
+      try {
+        const result = await authService.updateProfile({ avatar: compressedDataUrl });
+        if (result.user) {
+          updateUser(result.user);
+          // Also update localStorage
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          const updatedUser = { ...currentUser, ...result.user };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      } catch (error: any) {
+        console.error('Failed to upload image:', error);
+        alert(error.message || 'Failed to upload image. Please try again.');
+      } finally {
+        setUploadingImage(false);
+      }
     } catch (error: any) {
-      console.error('Image upload error:', error);
-      alert(error.message || 'Failed to upload image');
+      console.error('Image compression error:', error);
+      alert(error.message || 'Failed to process image');
       setUploadingImage(false);
     }
   };
