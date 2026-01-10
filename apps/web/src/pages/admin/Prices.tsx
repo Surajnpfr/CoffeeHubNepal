@@ -317,80 +317,80 @@ export const Prices = () => {
                       </div>
                     )}
                     <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-black text-base">{price.variety}</h4>
-                      {getTrendIcon(price.trend)}
-                      {price.change && (
-                        <span
-                          className={`text-xs font-bold ${
-                            price.trend === 'up'
-                              ? 'text-green-600'
-                              : price.trend === 'down'
-                              ? 'text-red-500'
-                              : 'text-gray-500'
-                          }`}
-                        >
-                          {price.change}
-                        </span>
-                      )}
-                    </div>
-                    {isEditing ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">रू</span>
-                          <input
-                            type="number"
-                            value={editPrice || ''}
-                            onChange={(e) => setEditPrice(parseFloat(e.target.value) || 0)}
-                            min="0"
-                            step="0.01"
-                            className="w-32 px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6F4E37]"
-                            autoFocus
-                          />
-                          <span className="text-sm text-gray-600">per kg</span>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 mb-1">
-                            Image (Optional)
-                          </label>
-                          {editImage && (
-                            <div className="mb-2">
-                              <img 
-                                src={editImage} 
-                                alt="Preview" 
-                                className="w-24 h-24 object-cover rounded-lg border border-gray-300"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setEditImage('')}
-                                className="mt-1 text-xs text-red-600 hover:underline"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                handleImageUpload(file, setEditImage);
-                              }
-                            }}
-                            className="w-full text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6F4E37]"
-                          />
-                        </div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h4 className="font-black text-base">{price.variety}</h4>
+                        {getTrendIcon(price.trend)}
+                        {price.change && (
+                          <span
+                            className={`text-xs font-bold ${
+                              price.trend === 'up'
+                                ? 'text-green-600'
+                                : price.trend === 'down'
+                                ? 'text-red-500'
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {price.change}
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-2xl font-black text-[#3A7D44]">
-                        रू {price.price} <span className="text-sm text-gray-600">per kg</span>
+                      {isEditing ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">रू</span>
+                            <input
+                              type="number"
+                              value={editPrice || ''}
+                              onChange={(e) => setEditPrice(parseFloat(e.target.value) || 0)}
+                              min="0"
+                              step="0.01"
+                              className="w-32 px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6F4E37]"
+                              autoFocus
+                            />
+                            <span className="text-sm text-gray-600">per kg</span>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-gray-700 mb-1">
+                              Image (Optional)
+                            </label>
+                            {editImage && (
+                              <div className="mb-2">
+                                <img 
+                                  src={editImage} 
+                                  alt="Preview" 
+                                  className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setEditImage('')}
+                                  className="mt-1 text-xs text-red-600 hover:underline"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  handleImageUpload(file, setEditImage);
+                                }
+                              }}
+                              className="w-full text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6F4E37]"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-2xl font-black text-[#3A7D44]">
+                          रू {price.price} <span className="text-sm text-gray-600">per kg</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Last updated: {new Date(price.updatedAt).toLocaleDateString()}
                       </p>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Last updated: {new Date(price.updatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
+                    </div>
                     <div className="flex items-center gap-2">
                       {isEditing ? (
                         <>
@@ -430,7 +430,8 @@ export const Prices = () => {
                         </>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                  </div>
+                </Card>
               );
             })}
           </div>
