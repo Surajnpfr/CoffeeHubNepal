@@ -119,7 +119,7 @@ export const Prices = () => {
     setIsDraggingEdit(null);
   };
 
-  const handleDrop = (e: React.DragEvent, setImage: (img: string) => void, _isEdit: boolean = false, _priceId?: string) => {
+  const handleDrop = async (e: React.DragEvent, setImage: (img: string) => void, _isEdit: boolean = false, _priceId?: string) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingNew(false);
@@ -127,7 +127,7 @@ export const Prices = () => {
 
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      handleImageUpload(file, setImage);
+      await handleImageUpload(file, setImage);
     }
   };
 
