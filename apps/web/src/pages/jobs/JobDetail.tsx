@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -16,7 +16,13 @@ interface JobDetailProps {
 
 export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
   const { user } = useAuth();
-  const { language, setSubPage } = useApp();
+  const { language, setSubPage, setCurrentPage } = useApp();
+  
+  // Handle back navigation properly
+  const handleBack = useCallback(() => {
+    setCurrentPage('jobs');
+    onBack();
+  }, [onBack, setCurrentPage]);
   const [job, setJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +161,7 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
       <div className="min-h-screen bg-[#F8F5F2] pb-32 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Job not found</p>
-          <Button onClick={onBack}>Go Back</Button>
+          <Button onClick={handleBack}>Go Back</Button>
         </div>
       </div>
     );
@@ -164,7 +170,7 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
   return (
     <div className="min-h-screen bg-[#F8F5F2] pb-32">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 py-4 flex items-center gap-4">
-        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
+        <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-lg font-black text-[#6F4E37]">{t(language, 'jobs.jobDetails')}</h2>

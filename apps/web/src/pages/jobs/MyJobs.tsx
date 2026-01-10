@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Plus, Eye } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -9,7 +9,13 @@ import { Job, jobService } from '@/services/job.service';
 import { t } from '@/i18n';
 
 export const MyJobs = () => {
-  const { setSubPage, navigate, language } = useApp();
+  const { setSubPage, setCurrentPage, navigate, language } = useApp();
+  
+  // Handle back navigation properly
+  const handleBack = useCallback(() => {
+    setCurrentPage('profile');
+    setSubPage(null);
+  }, [setCurrentPage, setSubPage]);
   const { user } = useAuth();
   const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +67,7 @@ export const MyJobs = () => {
   return (
     <div className="min-h-screen bg-[#F8F5F2] pb-32">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 py-4 flex items-center gap-4">
-        <button onClick={() => setSubPage(null)} className="p-2 hover:bg-gray-100 rounded-xl">
+        <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-lg font-black text-[#6F4E37] flex-1">{t(language, 'jobs.myJobs')}</h2>

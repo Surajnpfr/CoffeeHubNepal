@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Edit, Trash2, Calendar, Tag, Flag } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -17,8 +17,8 @@ interface BlogDetailProps {
 }
 
 export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
-  const { navigate } = useApp();
-  const { user } = useAuth();
+  const { navigate, setCurrentPage } = useApp();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,13 +26,26 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
   const [likesCount, setLikesCount] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
 
+  // Handle back navigation properly
+  const handleBack = useCallback(() => {
+    setCurrentPage('blog');
+    onBack();
+  }, [onBack, setCurrentPage]);
+
   useEffect(() => {
     loadPost();
   }, [postId]);
 
   useEffect(() => {
-    if (post && user) {
-      setIsLiked(post.likes.includes(user.mongoId || user.id.toString()));
+    if (post) {
+      // Check if user has liked this post
+      if (user && user.mongoId) {
+        setIsLiked(post.likes.includes(user.mongoId));
+      } else if (user) {
+        setIsLiked(post.likes.includes(user.id.toString()));
+      } else {
+        setIsLiked(false);
+      }
       setLikesCount(post.likes.length);
     }
   }, [post, user]);
@@ -66,19 +79,28 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
   };
 
   const handleLike = async () => {
-    if (!user || !post) {
-      alert('Please log in to like posts');
+    // Don't show login message if auth is still loading
+    if (authLoading) {
       return;
     }
+    
+    if (!isAuthenticated || !user) {
+      navigate('login');
+      return;
+    }
+
+    if (!post) return;
 
     try {
       const result = await blogService.likePost(post._id);
       setIsLiked(result.liked);
       setLikesCount(result.likesCount);
-      // Reload post to get updated comments
-      await loadPost();
     } catch (err: any) {
-      alert(err.message || 'Failed to like post');
+      if (err.message?.includes('log in')) {
+        navigate('login');
+      } else {
+        alert(err.message || 'Failed to like post');
+      }
     }
   };
 
@@ -124,7 +146,7 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
     return (
       <div className="min-h-screen bg-[#F8F5F2] pb-32 lg:pb-8">
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 lg:px-8 py-4 flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
+          <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
             <ArrowLeft size={20} />
           </button>
           <h2 className="text-lg font-black text-[#6F4E37]">Loading...</h2>
@@ -138,7 +160,7 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
     return (
       <div className="min-h-screen bg-[#F8F5F2] pb-32 lg:pb-8">
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 lg:px-8 py-4 flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
+          <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
             <ArrowLeft size={20} />
           </button>
           <h2 className="text-lg font-black text-[#6F4E37]">Error</h2>
@@ -152,7 +174,7 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
     <div className="min-h-screen bg-[#F8F5F2] pb-32 lg:pb-8">
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
+          <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
             <ArrowLeft size={20} />
           </button>
           <h2 className="text-lg font-black text-[#6F4E37]">Blog Post</h2>
@@ -259,8 +281,11 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
               isLiked={isLiked}
               likesCount={likesCount}
               onLike={handleLike}
-              disabled={!user}
+              disabled={authLoading}
             />
+            {!isAuthenticated && !authLoading && (
+              <span className="text-xs text-gray-500">Log in to like</span>
+            )}
           </div>
         </Card>
 
