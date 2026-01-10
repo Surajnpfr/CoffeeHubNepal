@@ -29,8 +29,28 @@ const createAzureEmailClient = (): EmailClient | null => {
   if (connectionString.includes('endpoint=') && connectionString.includes('accesskey=')) {
     // Already a connection string
   } else if (connectionString.includes('https://')) {
-    // Build connection string from endpoint URL and access key
-    connectionString = `endpoint=${env.smtpUser};accesskey=${env.smtpPass}`;
+    // Extract just the base endpoint URL (remove any path/query parameters that might be mixed in)
+    try {
+      const url = new URL(connectionString);
+      // Get just the origin (protocol + hostname + port if any)
+      const baseEndpoint = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ''}/`;
+      // Build connection string from clean endpoint URL and access key
+      connectionString = `endpoint=${baseEndpoint};accesskey=${env.smtpPass}`;
+      console.log('[Email Service] Extracted base endpoint:', baseEndpoint);
+    } catch (e) {
+      // If URL parsing fails, try to extract manually
+      // Remove anything after the domain (like /path or query params)
+      const match = connectionString.match(/^(https?:\/\/[^\/]+)/);
+      if (match) {
+        const baseEndpoint = match[1] + '/';
+        connectionString = `endpoint=${baseEndpoint};accesskey=${env.smtpPass}`;
+        console.log('[Email Service] Extracted base endpoint (fallback):', baseEndpoint);
+      } else {
+        // Fallback: use as-is but log warning
+        console.warn('[Email Service] Could not parse endpoint URL, using as-is');
+        connectionString = `endpoint=${env.smtpUser};accesskey=${env.smtpPass}`;
+      }
+    }
   } else {
     // Assume it's just the endpoint, build full connection string
     connectionString = `endpoint=https://${env.smtpUser};accesskey=${env.smtpPass}`;
