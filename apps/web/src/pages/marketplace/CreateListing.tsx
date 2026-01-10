@@ -138,68 +138,7 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
               <label className="block text-xs font-black text-gray-600 mb-3 uppercase tracking-tight">
                 Photos (Max 5)
               </label>
-              <div className="grid grid-cols-3 gap-3 mb-3">
-                {formData.images.map((img, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl overflow-hidden">
-                    <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          images: formData.images.filter((_, i) => i !== idx)
-                        });
-                      }}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg hover:bg-red-600 transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-                {formData.images.length < 5 && (
-                  <div
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
-                      isDragging
-                        ? 'border-[#6F4E37] bg-[#6F4E37]/5'
-                        : 'border-[#EBE3D5] hover:border-[#6F4E37] bg-gray-50'
-                    } ${uploading ? 'opacity-50' : ''}`}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                    {isDragging ? (
-                      <>
-                        <Upload size={24} className="text-[#6F4E37] mb-2" />
-                        <span className="text-xs font-bold text-[#6F4E37]">Drop here</span>
-                      </>
-                    ) : (
-                      <>
-                        <Camera size={24} className="text-gray-400 mb-2" />
-                        <span className="text-xs text-gray-500 text-center px-2">
-                          {uploading ? 'Uploading...' : 'Click or drag'}
-                        </span>
-                      </>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="mt-1 text-xs text-[#6F4E37] font-bold hover:underline disabled:opacity-50"
-                    >
-                      Browse
-                    </button>
-                  </div>
-                )}
-              </div>
-              {formData.images.length === 0 && (
+              {formData.images.length === 0 ? (
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -238,6 +177,68 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
                         Choose Images
                       </Button>
                     </>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3">
+                  {formData.images.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden">
+                      <img src={img} alt={`Upload ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            images: formData.images.filter((_, i) => i !== idx)
+                          });
+                        }}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {formData.images.length < 5 && (
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                        isDragging
+                          ? 'border-[#6F4E37] bg-[#6F4E37]/5'
+                          : 'border-[#EBE3D5] hover:border-[#6F4E37] bg-gray-50'
+                      } ${uploading ? 'opacity-50' : ''}`}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      {isDragging ? (
+                        <>
+                          <Upload size={24} className="text-[#6F4E37] mb-2" />
+                          <span className="text-xs font-bold text-[#6F4E37]">Drop here</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera size={24} className="text-gray-400 mb-2" />
+                          <span className="text-xs text-gray-500 text-center px-2">
+                            {uploading ? 'Uploading...' : 'Click or drag'}
+                          </span>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="mt-1 text-xs text-[#6F4E37] font-bold hover:underline disabled:opacity-50"
+                      >
+                        Browse
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
