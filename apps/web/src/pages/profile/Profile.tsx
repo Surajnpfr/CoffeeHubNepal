@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { blogService } from '@/services/blog.service';
+import { authService } from '@/services/auth.service';
 import { 
   Camera, 
   CheckCircle, 
@@ -19,12 +20,14 @@ import {
   Settings, 
   LogOut, 
   ChevronRight,
-  Info
+  Info,
+  Upload,
+  X
 } from 'lucide-react';
 
 export const Profile = () => {
   const { navigate, setCurrentPage, setSubPage, userRole, setUserRole } = useApp();
-  const { user, logout: authLogout } = useAuth();
+  const { user, logout: authLogout, updateUser } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [userStats, setUserStats] = useState({
     activeAds: 0,
@@ -32,6 +35,10 @@ export const Profile = () => {
     farmSize: 'N/A'
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const getRoleDisplay = (role: string) => {
     const roleMap: { [key: string]: { label: string; variant: 'primary' | 'success' | 'alert' | 'ai' } } = {
@@ -47,9 +54,10 @@ export const Profile = () => {
 
   const roleInfo = getRoleDisplay(user?.role || userRole);
   
-  // Generate avatar based on user email or name
+  // Get avatar URL - use user's uploaded avatar or fallback to generated avatar
   const avatarSeed = user?.email || user?.name || 'user';
-  const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
+  const generatedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
+  const avatarUrl = user?.avatar || generatedAvatarUrl;
   
   // Get user display name
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
@@ -107,6 +115,102 @@ export const Profile = () => {
     fetchUserStats();
   }, [user?.mongoId, user?.email]);
 
+  const handleImageUpload = async (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image size must be less than 2MB');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          const result = await authService.updateProfile({ avatar: base64String });
+          if (result.user) {
+            updateUser(result.user);
+            // Also update localStorage
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const updatedUser = { ...currentUser, ...result.user };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+          }
+        } catch (error: any) {
+          console.error('Failed to upload image:', error);
+          alert(error.message || 'Failed to upload image. Please try again.');
+        } finally {
+          setUploadingImage(false);
+        }
+      };
+      reader.onerror = () => {
+        alert('Failed to read image file');
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      console.error('Image upload error:', error);
+      alert(error.message || 'Failed to upload image');
+      setUploadingImage(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!confirm('Are you sure you want to remove your profile image?')) {
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const result = await authService.updateProfile({ avatar: '' });
+      if (result.user) {
+        updateUser(result.user);
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = { ...currentUser, ...result.user };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error: any) {
+      console.error('Failed to remove image:', error);
+      alert(error.message || 'Failed to remove image. Please try again.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleMenuClick = (item: string) => {
     switch(item) {
       case 'verification':
@@ -140,15 +244,59 @@ export const Profile = () => {
   return (
     <div className="p-6 lg:p-8 space-y-8 animate-in fade-in pb-32 lg:pb-8 pt-10">
     <div className="flex items-center gap-6">
-      <div className="w-24 h-24 rounded-[32px] bg-[#6F4E37] p-1 border-4 border-white shadow-2xl relative">
+      <div 
+        ref={dropZoneRef}
+        className={`w-24 h-24 rounded-[32px] bg-[#6F4E37] p-1 border-4 border-white shadow-2xl relative ${
+          isDragging ? 'ring-4 ring-[#6F4E37] ring-opacity-50' : ''
+        } ${uploadingImage ? 'opacity-50' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <img 
           src={avatarUrl} 
           className="w-full h-full object-cover rounded-[28px]" 
           alt={displayName} 
         />
-        <button className="absolute -right-2 -bottom-2 bg-white p-2 rounded-xl shadow-lg text-[#6F4E37] border border-[#EBE3D5]">
-          <Camera size={16}/>
-        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <div className="absolute -right-2 -bottom-2 flex gap-1">
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingImage}
+            className="bg-white p-2 rounded-xl shadow-lg text-[#6F4E37] border border-[#EBE3D5] hover:bg-gray-50 disabled:opacity-50"
+            title="Upload image"
+          >
+            {uploadingImage ? (
+              <div className="w-4 h-4 border-2 border-[#6F4E37] border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Camera size={16}/>
+            )}
+          </button>
+          {user?.avatar && (
+            <button 
+              onClick={handleRemoveImage}
+              disabled={uploadingImage}
+              className="bg-white p-2 rounded-xl shadow-lg text-red-600 border border-red-200 hover:bg-red-50 disabled:opacity-50"
+              title="Remove image"
+            >
+              <X size={16}/>
+            </button>
+          )}
+        </div>
+        {isDragging && (
+          <div className="absolute inset-0 bg-[#6F4E37] bg-opacity-80 rounded-[28px] flex items-center justify-center">
+            <div className="text-white text-xs font-bold text-center">
+              <Upload size={20} className="mx-auto mb-1" />
+              Drop image here
+            </div>
+          </div>
+        )}
       </div>
       <div>
         <div className="flex items-center gap-2">

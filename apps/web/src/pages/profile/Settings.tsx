@@ -4,6 +4,7 @@ import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { authService } from '@/services/auth.service';
 import { useState, useEffect } from 'react';
 import { t } from '@/i18n';
 
@@ -12,6 +13,13 @@ export const Settings = () => {
   const { user, updateUser } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Check if user can edit name (only before verification, except mods/admins)
+  const isModOrAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const canEditName = !user?.verified || isModOrAdmin;
 
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
@@ -53,13 +61,21 @@ export const Settings = () => {
               label={t(language, 'settings.fullName')}
               value={profileData.name}
               onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+              disabled={!canEditName}
             />
+            {!canEditName && (
+              <p className="text-xs text-gray-500 mt-1">
+                Name can only be updated before verification. Please contact support if you need to change your name after verification.
+              </p>
+            )}
             <Input
               type="email"
               label={t(language, 'settings.email')}
               value={profileData.email}
               onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              disabled
             />
+            <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
             <Input
               type="tel"
               label={t(language, 'settings.phoneNumber')}
@@ -71,26 +87,54 @@ export const Settings = () => {
               value={profileData.location}
               onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
             />
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+            {success && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-600 text-sm">{success}</p>
+              </div>
+            )}
             <Button 
               variant="primary" 
               className="w-full"
-              onClick={() => {
-                // Update user in context and localStorage
-                if (user) {
-                  updateUser({
-                    name: profileData.name,
-                    email: profileData.email,
+              disabled={saving}
+              onClick={async () => {
+                if (!user) return;
+                
+                setSaving(true);
+                setError(null);
+                setSuccess(null);
+                
+                try {
+                  // Only send name if it can be edited
+                  const updateData: any = {
                     phone: profileData.phone,
                     location: profileData.location
-                  });
-                  // Also update localStorage
-                  const updatedUser = { ...user, ...profileData };
-                  localStorage.setItem('user', JSON.stringify(updatedUser));
-                  alert(t(language, 'settings.profileUpdated'));
+                  };
+                  
+                  if (canEditName) {
+                    updateData.name = profileData.name;
+                  }
+                  
+                  const result = await authService.updateProfile(updateData);
+                  
+                  if (result.user) {
+                    updateUser(result.user);
+                    setSuccess(t(language, 'settings.profileUpdated') || 'Profile updated successfully');
+                    setTimeout(() => setSuccess(null), 3000);
+                  }
+                } catch (err: any) {
+                  console.error('Failed to update profile:', err);
+                  setError(err.message || 'Failed to update profile. Please try again.');
+                } finally {
+                  setSaving(false);
                 }
               }}
             >
-              {t(language, 'settings.saveChanges')}
+              {saving ? 'Saving...' : t(language, 'settings.saveChanges')}
             </Button>
           </div>
         </Card>

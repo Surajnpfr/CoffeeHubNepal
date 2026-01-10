@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { captchaCheck } from '../middleware/captcha.js';
 import { accountRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimit.js';
 import { validate } from '../middleware/validate.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { isPasswordStrong, login, signup, requestPasswordReset, resetPassword } from '../services/authService.js';
 import { User } from '../models/User.js';
 
@@ -55,6 +56,7 @@ router.post(
           role: result.user.role,
           phone: result.user.phone,
           location: result.user.location,
+          avatar: result.user.avatar,
           verified: result.user.verified
         }
       });
@@ -89,6 +91,7 @@ router.post(
           role: result.user.role,
           phone: result.user.phone,
           location: result.user.location,
+          avatar: result.user.avatar,
           verified: result.user.verified
         }
       });
@@ -193,6 +196,80 @@ router.post(
       return res.status(500).json({ 
         error: 'RESET_PASSWORD_FAILED',
         message: 'Failed to reset password. Please try again.'
+      });
+    }
+  }
+);
+
+// Update profile endpoint
+const updateProfileSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  phone: z.string().max(20).optional(),
+  location: z.string().max(200).optional(),
+  avatar: z.string().optional() // Base64 image string
+});
+
+router.put(
+  '/profile',
+  authenticate,
+  validate(updateProfileSchema),
+  async (req: AuthRequest, res) => {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const { name, phone, location, avatar } = req.body;
+      const user = await User.findById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+      }
+
+      // Check if user can update name (only before verification, except mods/admins)
+      const isModOrAdmin = user.role === 'admin' || user.role === 'moderator';
+      const canUpdateName = !user.verified || isModOrAdmin;
+
+      // Update fields
+      if (name !== undefined && canUpdateName) {
+        user.name = name;
+      } else if (name !== undefined && !canUpdateName) {
+        return res.status(403).json({ 
+          error: 'NAME_UPDATE_RESTRICTED', 
+          message: 'Name can only be updated before verification. Please contact support if you need to change your name after verification.' 
+        });
+      }
+
+      if (phone !== undefined) {
+        user.phone = phone;
+      }
+      if (location !== undefined) {
+        user.location = location;
+      }
+      if (avatar !== undefined) {
+        user.avatar = avatar;
+      }
+
+      await user.save();
+
+      return res.json({
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          phone: user.phone,
+          location: user.location,
+          avatar: user.avatar,
+          verified: user.verified
+        }
+      });
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return res.status(500).json({ 
+        error: 'UPDATE_PROFILE_FAILED',
+        message: 'Failed to update profile. Please try again.' 
       });
     }
   }

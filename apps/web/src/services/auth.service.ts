@@ -99,6 +99,7 @@ export const authService = {
         role: (data.user.role || 'farmer') as 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator',
         phone: data.user.phone || '',
         location: data.user.location || '',
+        avatar: data.user.avatar || '',
         verified: data.user.verified || false,
         memberSince: new Date().getFullYear().toString()
       };
@@ -205,6 +206,7 @@ export const authService = {
         name: result.user.name || data.name || result.user.email.split('@')[0] || 'User', // Use name from backend or registration
         phone: result.user.phone || data.phone || '',
         location: result.user.location || data.location || '',
+        avatar: result.user.avatar || '',
         role: (result.user.role || data.role || 'farmer') as 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator', // Use role from backend or registration
         verified: result.user.verified || false,
         memberSince: new Date().getFullYear().toString()
@@ -311,6 +313,63 @@ export const authService = {
       }
 
       return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error. Please check if the API server is running.');
+    }
+  },
+
+  async updateProfile(data: { name?: string; phone?: string; location?: string; avatar?: string }) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(result.message || result.error || 'You cannot update this field after verification');
+        }
+        if (response.status === 401) {
+          throw new Error('Session expired. Please log in again.');
+        }
+        throw new Error(result.message || result.error || 'Failed to update profile');
+      }
+
+      // Update localStorage with new user data
+      const mongoId = typeof result.user.id === 'string' ? result.user.id : result.user.id?.toString();
+      const userId = typeof result.user.id === 'string' ? parseInt(result.user.id, 16) || Date.now() : result.user.id;
+      const userWithDefaults = {
+        id: userId,
+        mongoId: mongoId,
+        email: result.user.email,
+        name: result.user.name || result.user.email.split('@')[0] || 'User',
+        role: (result.user.role || 'farmer') as 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator',
+        phone: result.user.phone || '',
+        location: result.user.location || '',
+        avatar: result.user.avatar || '',
+        verified: result.user.verified || false,
+        memberSince: new Date().getFullYear().toString()
+      };
+      
+      localStorage.setItem('user', JSON.stringify(userWithDefaults));
+
+      return {
+        user: userWithDefaults
+      };
     } catch (error) {
       if (error instanceof Error) {
         throw error;

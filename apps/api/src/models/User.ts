@@ -9,6 +9,7 @@ export interface UserDocument extends Document {
   role: UserRole;
   phone?: string;
   location?: string;
+  avatar?: string; // Base64 image or URL
   verified: boolean;
   roleChangeRequest?: {
     requestedRole: UserRole;
@@ -41,6 +42,7 @@ const userSchema = new Schema<UserDocument>(
     },
     phone: { type: String, trim: true },
     location: { type: String, trim: true },
+    avatar: { type: String }, // Base64 image or URL
     verified: { type: Boolean, default: false },
     roleChangeRequest: {
       requestedRole: { type: String, enum: ['farmer', 'roaster', 'trader', 'exporter', 'expert', 'admin', 'moderator'] },

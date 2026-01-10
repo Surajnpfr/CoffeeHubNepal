@@ -9,6 +9,7 @@ export interface User {
   email: string;
   phone?: string;
   location?: string;
+  avatar?: string; // Base64 image or URL
   role: 'farmer' | 'roaster' | 'trader' | 'exporter' | 'expert' | 'admin' | 'moderator';
   verified?: boolean;
   memberSince?: string;
