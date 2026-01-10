@@ -15,10 +15,11 @@ export const Modal = ({ children, onClose, className = "" }: ModalProps) => (
     ></div>
     <div className={`relative w-full max-w-2xl bg-[#F8F5F2] rounded-t-[48px] overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto ${className}`}>
       <button 
-        className="absolute top-6 right-6 z-10 bg-white/50 backdrop-blur-sm p-3 rounded-2xl" 
+        className="fixed top-6 right-6 z-[70] bg-white/90 backdrop-blur-sm hover:bg-white p-3 rounded-2xl shadow-lg transition-colors" 
         onClick={onClose}
+        aria-label="Close"
       >
-        <X/>
+        <X size={20}/>
       </button>
       {children}
     </div>
