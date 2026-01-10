@@ -1,15 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { ListingCard } from '@/components/cards/ListingCard';
-import { MOCK_LISTINGS } from '@/utils/mockData';
 import { ListingDetail } from './ListingDetail';
+import { marketplaceService, Listing } from '@/services/marketplace.service';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/i18n';
 
 export const Marketplace = () => {
-  const [selectedListing, setSelectedListing] = useState<typeof MOCK_LISTINGS[0] | null>(null);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { language } = useApp();
+
+  useEffect(() => {
+    loadListings();
+  }, [searchQuery]);
+
+  const loadListings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await marketplaceService.getListings({
+        search: searchQuery || undefined,
+        limit: 100 // Get all active listings
+      });
+      // Filter out sold items and only show active/verified products
+      const activeListings = response.products.filter(
+        (product) => !product.sold && (product.active !== false)
+      );
+      setListings(activeListings);
+    } catch (err: any) {
+      console.error('Failed to load listings:', err);
+      setError(err.message || 'Failed to load products');
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <>
@@ -29,18 +63,36 @@ export const Marketplace = () => {
           <input 
             className="w-full bg-white border border-[#EBE3D5] rounded-3xl py-3.5 pl-12 pr-4 outline-none focus:ring-2 ring-[#6F4E37]/10 text-sm"
             placeholder={t(language, 'marketplace.searchPlaceholder')}
+            value={searchQuery}
+            onChange={handleSearch}
           />
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {MOCK_LISTINGS.map(item => (
-            <ListingCard 
-              key={item.id} 
-              listing={item} 
-              onClick={() => setSelectedListing(item)}
-            />
-          ))}
-        </div>
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">{t(language, 'common.loading')}</p>
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">{searchQuery ? 'No products found matching your search.' : 'No products available at the moment.'}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {listings.map(item => (
+              <ListingCard 
+                key={item._id || item.id} 
+                listing={item} 
+                onClick={() => setSelectedListing(item)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedListing && (
