@@ -1,0 +1,91 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs (will be built in Docker)
+**/dist/
+**/build/
+apps/api/public/
+
+# Development files
+.env
+.env.*
+*.local
+**/env.example
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+**/tests/
+**/__tests__/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+
+# Cache
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Deployment scripts (not needed in container)
+deploy/
+scripts/copy-*.js
+scripts/create-*.js
+scripts/build-*.js
+
+# Project-specific
+*ACCESS_PHONE.md
+*ICONS_LIST.md
+*CAPTCHA_SETUP.md
+*PASSWORD_RESET_SETUP.md
+*SET_ADMIN_GUIDE.md
+*AZURE_COLLECTION_SETUP.md
+*HOSTINGER_GUIDE.md
+*DEPLOYMENT*.md
+*NODEJS_DEPLOYMENT.md
+*QUICK_START.md
+*API_CONFIGURATION.md
+
+# Procfile (not needed in Docker)
+Procfile
+
+# Package lock files (will be generated)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
