@@ -41,6 +41,7 @@ apps/web/env.example
 # IDE and Editor files
 .vscode/
 !.vscode/extensions.json
+.cursor/
 .idea/
 *.swp
 *.swo
