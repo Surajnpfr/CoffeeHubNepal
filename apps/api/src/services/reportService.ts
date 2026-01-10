@@ -68,6 +68,7 @@ export const getReports = async (filters?: {
     query.type = filters.type;
   }
 
+  // Optimize: Use lean() and reduce populate calls - only populate what's needed
   const [reports, total] = await Promise.all([
     Report.find(query)
       .populate('postId', 'title authorName')
@@ -77,8 +78,9 @@ export const getReports = async (filters?: {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .lean(),
-    Report.countDocuments(query)
+      .lean()
+      .exec(),
+    Report.countDocuments(query).exec()
   ]);
 
   return {

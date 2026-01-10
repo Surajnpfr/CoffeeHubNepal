@@ -36,6 +36,22 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(ipRateLimiter);
 
+  // Add caching headers for GET requests (except auth endpoints)
+  app.use((req, res, next) => {
+    // Only cache GET requests
+    if (req.method === 'GET' && !req.path.startsWith('/auth')) {
+      // Cache public data for 5 minutes
+      if (req.path.startsWith('/blog') || req.path.startsWith('/admin/stats')) {
+        res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
+      }
+      // Cache health check for 1 minute
+      if (req.path === '/health') {
+        res.set('Cache-Control', 'public, max-age=60'); // 1 minute
+      }
+    }
+    next();
+  });
+
   // API routes (must come before static file serving)
   app.use('/auth', authRoutes);
   app.use('/blog', blogRoutes);

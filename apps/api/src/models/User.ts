@@ -55,7 +55,10 @@ const userSchema = new Schema<UserDocument>(
   { timestamps: true }
 );
 
-// Index for faster reset token lookups
+// Performance indexes
 userSchema.index({ resetToken: 1 });
+userSchema.index({ email: 1 }); // Already unique, but explicit index helps
+userSchema.index({ role: 1, verified: 1 }); // For admin queries
+userSchema.index({ createdAt: -1 }); // For sorting
 
 export const User = mongoose.model<UserDocument>('User', userSchema);

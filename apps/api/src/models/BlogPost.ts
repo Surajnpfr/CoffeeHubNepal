@@ -88,9 +88,12 @@ const blogPostSchema = new Schema<BlogPostDocument>(
   { timestamps: true }
 );
 
+// Performance indexes
 blogPostSchema.index({ createdAt: -1 });
 blogPostSchema.index({ category: 1, createdAt: -1 });
 blogPostSchema.index({ tags: 1 });
+blogPostSchema.index({ published: 1, createdAt: -1 }); // Compound index for common query
+blogPostSchema.index({ author: 1, createdAt: -1 }); // For author-specific queries
 
 export const BlogPost = mongoose.model<BlogPostDocument>('BlogPost', blogPostSchema);
 

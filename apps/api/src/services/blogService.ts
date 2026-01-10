@@ -93,8 +93,11 @@ export const getPosts = async (filters?: {
     query.author = new mongoose.Types.ObjectId(filters.author);
   }
 
+  // Use .lean() for better performance - returns plain JS objects instead of Mongoose documents
+  // Select only needed fields to reduce payload size
   const [posts, total] = await Promise.all([
     BlogPost.find(query)
+      .select('title content author authorName authorEmail category tags images likes comments published createdAt updatedAt')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -113,8 +116,12 @@ export const getPosts = async (filters?: {
   };
 };
 
-export const getPostById = async (id: string): Promise<BlogPostDocument | null> => {
-  return await BlogPost.findById(id);
+export const getPostById = async (id: string): Promise<any> => {
+  // Use .lean() for read operations - much faster, returns plain JS object
+  // Select only needed fields to reduce payload size
+  return await BlogPost.findById(id)
+    .select('title content author authorName authorEmail category tags images likes comments published createdAt updatedAt')
+    .lean();
 };
 
 export const updatePost = async (

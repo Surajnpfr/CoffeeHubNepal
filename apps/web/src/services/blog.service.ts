@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/utils/constants';
+import { getCached, setCached, clearCache } from '@/utils/cache';
 
 export interface BlogPost {
   _id: string;
@@ -76,11 +77,26 @@ export const blogService = {
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
+    const cacheKey = `blog-posts-${params.toString()}`;
+    
+    // Check cache first (only for GET requests without page filters for now)
+    if (!filters?.page || filters.page === 1) {
+      const cached = getCached(cacheKey);
+      if (cached) return cached;
+    }
+
     const response = await fetch(`${API_BASE_URL}/blog?${params.toString()}`);
     if (!response.ok) {
       throw new Error('Failed to fetch blog posts');
     }
-    return response.json();
+    const data = await response.json();
+    
+    // Cache the response
+    if (!filters?.page || filters.page === 1) {
+      setCached(cacheKey, data);
+    }
+    
+    return data;
   },
 
   async getPostById(id: string): Promise<BlogPost> {
@@ -129,6 +145,9 @@ export const blogService = {
       throw new Error(result.message || result.error || 'Failed to create blog post');
     }
 
+    // Clear cache after creating post
+    clearCache('blog-posts');
+    
     return result;
   },
 
@@ -151,6 +170,10 @@ export const blogService = {
       throw new Error(result.message || 'Failed to update blog post');
     }
 
+    // Clear cache after updating post
+    clearCache('blog-posts');
+    clearCache(`blog-post-${id}`);
+    
     return result;
   },
 
@@ -170,6 +193,10 @@ export const blogService = {
       }
       throw new Error(result.message || 'Failed to delete blog post');
     }
+
+    // Clear cache after deleting post
+    clearCache('blog-posts');
+    clearCache(`blog-post-${id}`);
   },
 
   async likePost(id: string): Promise<{ liked: boolean; likesCount: number }> {
@@ -185,7 +212,12 @@ export const blogService = {
       throw new Error('Failed to like post');
     }
 
-    return response.json();
+    const result = await response.json();
+    
+    // Clear cache after liking post
+    clearCache(`blog-post-${id}`);
+    
+    return result;
   },
 
   async addComment(postId: string, content: string, authorName: string): Promise<BlogPost> {
@@ -204,6 +236,9 @@ export const blogService = {
       throw new Error(result.message || 'Failed to add comment');
     }
 
+    // Clear cache after adding comment
+    clearCache(`blog-post-${postId}`);
+    
     return result;
   },
 
