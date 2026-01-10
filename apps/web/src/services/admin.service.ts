@@ -132,6 +132,12 @@ export const adminService = {
     });
 
     if (!response.ok) {
+      // Handle token expiration
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        throw new Error('Invalid or expired token. Please log in again.');
+      }
       throw new Error('Failed to fetch admin statistics');
     }
 

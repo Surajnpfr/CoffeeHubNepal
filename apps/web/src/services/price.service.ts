@@ -18,6 +18,8 @@ export interface Price {
   image?: string;
   updatedAt: string;
   previousPrice?: number;
+  updatedBy?: string;
+  updatedByName?: string;
 }
 
 export const priceService = {

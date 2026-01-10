@@ -492,9 +492,21 @@ export const Prices = () => {
                           रू {price.price} <span className="text-sm text-gray-600">per kg</span>
                         </p>
                       )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Last updated: {new Date(price.updatedAt).toLocaleDateString()}
-                      </p>
+                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                        <p>
+                          Last updated: {new Date(price.updatedAt).toLocaleDateString()} at {new Date(price.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        {price.updatedByName && (
+                          <p className="text-[#6F4E37] font-semibold">
+                            Updated by: {price.updatedByName}
+                          </p>
+                        )}
+                        {price.previousPrice && price.previousPrice !== price.price && (
+                          <p className="text-gray-400">
+                            Previous: रू {price.previousPrice.toLocaleString()} ({price.change || '0%'})
+                          </p>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {isEditing ? (

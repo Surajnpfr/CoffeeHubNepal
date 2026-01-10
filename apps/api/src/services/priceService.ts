@@ -32,13 +32,21 @@ export const createPrice = async (userId: string, userName: string, data: Create
 
 export const getPrices = async (): Promise<any[]> => {
   return await Price.find({ active: true })
-    .select('variety price change trend image updatedAt')
+    .select('variety price previousPrice change trend image updatedBy updatedByName updatedAt')
     .sort({ variety: 1 })
     .lean();
 };
 
 export const getPriceById = async (id: string): Promise<any> => {
-  return await Price.findById(id).lean();
+  const price = await Price.findById(id).lean();
+  if (price) {
+    return {
+      ...price,
+      _id: price._id.toString(),
+      updatedBy: price.updatedBy?.toString()
+    };
+  }
+  return null;
 };
 
 export const updatePrice = async (id: string, userId: string, userName: string, newPrice?: number, image?: string): Promise<any> => {
@@ -80,7 +88,14 @@ export const updatePrice = async (id: string, userId: string, userName: string, 
     { new: true, runValidators: true }
   ).lean();
 
-  return updated;
+  if (updated) {
+    return {
+      ...updated,
+      _id: updated._id.toString(),
+      updatedBy: updated.updatedBy?.toString()
+    };
+  }
+  return null;
 };
 
 export const updatePriceByVariety = async (variety: string, userId: string, userName: string, newPrice?: number, image?: string): Promise<any> => {
