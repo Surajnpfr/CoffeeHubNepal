@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
 import { TrendingUp, Briefcase, DollarSign, ShieldAlert } from 'lucide-react';
-import { MOCK_PRICES } from '@/utils/mockData';
 import { useApp } from '@/context/AppContext';
+import { priceService, Price } from '@/services/price.service';
 import { t } from '@/i18n';
 
 interface HomeProps {
@@ -10,6 +11,26 @@ interface HomeProps {
 
 export const Home = ({ onNavigate }: HomeProps) => {
   const { language } = useApp();
+  const [prices, setPrices] = useState<Price[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPrices();
+  }, []);
+
+  const loadPrices = async () => {
+    setLoading(true);
+    try {
+      const data = await priceService.getPrices();
+      // Show only first 4-6 prices on homepage
+      setPrices(data.slice(0, 6));
+    } catch (error) {
+      console.error('Failed to load prices:', error);
+      setPrices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <div className="p-6 lg:p-8 space-y-8 animate-in fade-in duration-500 pb-32 lg:pb-8">
@@ -20,15 +41,33 @@ export const Home = ({ onNavigate }: HomeProps) => {
           <TrendingUp className="text-[#3A7D44]" size={16}/>
         </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-        {MOCK_PRICES.map((p, i) => (
-          <Card key={i} className="min-w-[140px] p-4 flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-gray-500">{p.variety}</span>
-            <p className="font-black text-lg">रू {p.price}</p>
-            <span className={`text-[10px] font-black ${p.trend === 'up' ? 'text-green-600' : p.trend === 'down' ? 'text-red-500' : 'text-gray-500'}`}>
-              {p.change}
-            </span>
-          </Card>
-        ))}
+        {loading ? (
+          <div className="text-center py-4 text-gray-500 text-sm">Loading prices...</div>
+        ) : prices.length === 0 ? (
+          <div className="text-center py-4 text-gray-500 text-sm">No prices available</div>
+        ) : (
+          prices.map((p) => (
+            <Card key={p._id || p.id} className="min-w-[140px] p-4 flex flex-col gap-2">
+              {p.image && (
+                <div className="w-full h-20 rounded-lg overflow-hidden bg-gray-100 mb-1">
+                  <img 
+                    src={p.image} 
+                    alt={p.variety}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+              <span className="text-[10px] font-bold text-gray-500">{p.variety}</span>
+              <p className="font-black text-lg">रू {p.price}</p>
+              <span className={`text-[10px] font-black ${p.trend === 'up' ? 'text-green-600' : p.trend === 'down' ? 'text-red-500' : 'text-gray-500'}`}>
+                {p.change || '0.0%'}
+              </span>
+            </Card>
+          ))
+        )}
       </div>
     </section>
 

@@ -15,6 +15,7 @@ export interface Price {
   price: number;
   change?: string;
   trend: 'up' | 'down' | 'stable';
+  image?: string;
   updatedAt: string;
   previousPrice?: number;
 }
@@ -40,7 +41,7 @@ export const priceService = {
   },
 
   // Moderator only - Create price
-  async createPrice(data: { variety: string; price: number }): Promise<Price> {
+  async createPrice(data: { variety: string; price: number; image?: string }): Promise<Price> {
     const response = await fetch(`${API_BASE_URL}/prices`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -57,11 +58,11 @@ export const priceService = {
   },
 
   // Moderator only - Update price by ID
-  async updatePrice(id: string, newPrice: number): Promise<Price> {
+  async updatePrice(id: string, newPrice?: number, image?: string): Promise<Price> {
     const response = await fetch(`${API_BASE_URL}/prices/${id}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ price: newPrice })
+      body: JSON.stringify({ price: newPrice, image })
     });
 
     if (!response.ok) {

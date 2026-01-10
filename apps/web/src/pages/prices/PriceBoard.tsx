@@ -123,8 +123,20 @@ export const PriceBoard = () => {
             {prices.map((price) => (
               <div 
                 key={price._id || price.id}
-                className="flex items-center justify-between p-4 bg-[#F8F5F2] rounded-2xl border border-[#EBE3D5] hover:border-[#6F4E37] transition-colors"
+                className="flex items-center gap-4 p-4 bg-[#F8F5F2] rounded-2xl border border-[#EBE3D5] hover:border-[#6F4E37] transition-colors"
               >
+                {price.image && (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                    <img 
+                      src={price.image} 
+                      alt={price.variety}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="flex-1">
                   <h4 className="font-black text-base mb-1">{price.variety}</h4>
                   <div className="flex items-center gap-3">

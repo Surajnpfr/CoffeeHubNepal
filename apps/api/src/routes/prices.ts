@@ -16,7 +16,8 @@ const router = Router();
 
 const createPriceSchema = z.object({
   variety: z.string().min(1),
-  price: z.number().min(0)
+  price: z.number().min(0),
+  image: z.string().optional()
 });
 
 const updatePriceSchema = z.object({
@@ -84,7 +85,7 @@ router.put('/:id', authenticate, requireModerator, validate(updatePriceSchema), 
       return res.status(401).json({ error: 'USER_NOT_FOUND' });
     }
 
-    const price = await updatePrice(req.params.id, req.userId!, user.name || 'Moderator', req.body.price);
+    const price = await updatePrice(req.params.id, req.userId!, user.name || 'Moderator', req.body.price, req.body.image);
     
     if (!price) {
       return res.status(404).json({ error: 'PRICE_NOT_FOUND' });
@@ -114,7 +115,8 @@ router.put('/variety/:variety', authenticate, requireModerator, validate(updateP
       req.params.variety,
       req.userId!,
       user.name || 'Moderator',
-      req.body.price
+      req.body.price,
+      req.body.image
     );
     
     if (!price) {

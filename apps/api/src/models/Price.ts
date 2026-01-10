@@ -8,6 +8,7 @@ export interface PriceDocument extends Document {
   previousPrice?: number; // Previous price for calculating change
   change?: string; // Percentage change, e.g., "+2.5%"
   trend: PriceTrend;
+  image?: string; // Image URL (base64 or external URL)
   updatedBy: mongoose.Types.ObjectId; // Moderator who updated
   updatedByName: string;
   active: boolean;
@@ -42,6 +43,10 @@ const priceSchema = new Schema<PriceDocument>(
       enum: ['up', 'down', 'stable'],
       default: 'stable',
       index: true
+    },
+    image: {
+      type: String,
+      trim: true
     },
     updatedBy: {
       type: Schema.Types.ObjectId,

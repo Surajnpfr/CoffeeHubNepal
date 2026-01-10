@@ -15,9 +15,11 @@ export const Prices = () => {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState<number>(0);
+  const [editImage, setEditImage] = useState<string>('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newVariety, setNewVariety] = useState('');
   const [newPrice, setNewPrice] = useState<number>(0);
+  const [newImage, setNewImage] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
   // Redirect if not authenticated or not admin/moderator
@@ -48,11 +50,30 @@ export const Prices = () => {
   const handleEdit = (price: Price) => {
     setEditingId(price._id || price.id || '');
     setEditPrice(price.price);
+    setEditImage(price.image || '');
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditPrice(0);
+    setEditImage('');
+  };
+
+  const handleImageUpload = (file: File, setImage: (img: string) => void) => {
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image size must be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setImage(base64String);
+    };
+    reader.onerror = () => {
+      setError('Failed to read image file');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (priceId: string) => {
@@ -64,9 +85,10 @@ export const Prices = () => {
     setSaving(true);
     setError(null);
     try {
-      await priceService.updatePrice(priceId, editPrice);
+      await priceService.updatePrice(priceId, editPrice, editImage || undefined);
       await loadPrices();
       setEditingId(null);
+      setEditImage('');
     } catch (err: any) {
       console.error('Failed to update price:', err);
       setError(err.message || 'Failed to update price');
@@ -104,12 +126,14 @@ export const Prices = () => {
     try {
       await priceService.createPrice({
         variety: newVariety.trim(),
-        price: newPrice
+        price: newPrice,
+        image: newImage || undefined
       });
       await loadPrices();
       setShowCreateForm(false);
       setNewVariety('');
       setNewPrice(0);
+      setNewImage('');
     } catch (err: any) {
       console.error('Failed to create price:', err);
       setError(err.message || 'Failed to create price');
@@ -166,6 +190,7 @@ export const Prices = () => {
                   setShowCreateForm(false);
                   setNewVariety('');
                   setNewPrice(0);
+                  setNewImage('');
                   setError(null);
                 }}
                 className="p-1 hover:bg-gray-100 rounded"
@@ -200,6 +225,39 @@ export const Prices = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:border-[#6F4E37]"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Image (Optional)
+                </label>
+                {newImage && (
+                  <div className="mb-2">
+                    <img 
+                      src={newImage} 
+                      alt="Preview" 
+                      className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewImage('')}
+                      className="mt-2 text-xs text-red-600 hover:underline"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleImageUpload(file, setNewImage);
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:border-[#6F4E37] text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">Max 2MB. JPG, PNG, or WebP</p>
+              </div>
               <div className="flex gap-2">
                 <Button
                   variant="primary"
@@ -215,6 +273,7 @@ export const Prices = () => {
                     setShowCreateForm(false);
                     setNewVariety('');
                     setNewPrice(0);
+                    setNewImage('');
                     setError(null);
                   }}
                 >
@@ -244,26 +303,39 @@ export const Prices = () => {
               
               return (
                 <Card key={priceId} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h4 className="font-black text-base">{price.variety}</h4>
-                        {getTrendIcon(price.trend)}
-                        {price.change && (
-                          <span
-                            className={`text-xs font-bold ${
-                              price.trend === 'up'
-                                ? 'text-green-600'
-                                : price.trend === 'down'
-                                ? 'text-red-500'
-                                : 'text-gray-500'
-                            }`}
-                          >
-                            {price.change}
-                          </span>
-                        )}
+                  <div className="flex items-center gap-4">
+                    {price.image && !isEditing && (
+                      <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-gray-100">
+                        <img 
+                          src={price.image} 
+                          alt={price.variety}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
                       </div>
-                      {isEditing ? (
+                    )}
+                    <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-black text-base">{price.variety}</h4>
+                      {getTrendIcon(price.trend)}
+                      {price.change && (
+                        <span
+                          className={`text-xs font-bold ${
+                            price.trend === 'up'
+                              ? 'text-green-600'
+                              : price.trend === 'down'
+                              ? 'text-red-500'
+                              : 'text-gray-500'
+                          }`}
+                        >
+                          {price.change}
+                        </span>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <div className="space-y-3">
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-600">रू</span>
                           <input
@@ -277,15 +349,48 @@ export const Prices = () => {
                           />
                           <span className="text-sm text-gray-600">per kg</span>
                         </div>
-                      ) : (
-                        <p className="text-2xl font-black text-[#3A7D44]">
-                          रू {price.price} <span className="text-sm text-gray-600">per kg</span>
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Last updated: {new Date(price.updatedAt).toLocaleDateString()}
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1">
+                            Image (Optional)
+                          </label>
+                          {editImage && (
+                            <div className="mb-2">
+                              <img 
+                                src={editImage} 
+                                alt="Preview" 
+                                className="w-24 h-24 object-cover rounded-lg border border-gray-300"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setEditImage('')}
+                                className="mt-1 text-xs text-red-600 hover:underline"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleImageUpload(file, setEditImage);
+                              }
+                            }}
+                            className="w-full text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:border-[#6F4E37]"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-2xl font-black text-[#3A7D44]">
+                        रू {price.price} <span className="text-sm text-gray-600">per kg</span>
                       </p>
-                    </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Last updated: {new Date(price.updatedAt).toLocaleDateString()}
+                    </p>
+                  </div>
                     <div className="flex items-center gap-2">
                       {isEditing ? (
                         <>
@@ -325,8 +430,7 @@ export const Prices = () => {
                         </>
                       )}
                     </div>
-                  </div>
-                </Card>
+                    <div className="flex items-center gap-2">
               );
             })}
           </div>
