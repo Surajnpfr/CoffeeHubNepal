@@ -39,9 +39,11 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+# Copy package files
+COPY apps/api/package.json ./
 # Install production dependencies only
-COPY apps/api/package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# Using npm install (not npm ci) since package-lock.json may not be in build context
+RUN npm install --production --no-audit --no-fund && npm cache clean --force
 
 # Copy built API from builder
 COPY --from=api-builder /app/apps/api/dist ./dist
