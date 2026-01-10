@@ -96,8 +96,8 @@ export const MyListings = () => {
             const listingId = listing._id || listing.id || '';
             const imageUrl = listing.images && listing.images.length > 0 
               ? listing.images[0] 
-              : listing.image || 'https://via.placeholder.com/200x200?text=No+Image';
-            const description = listing.description || listing.desc || '';
+              : 'https://via.placeholder.com/200x200?text=No+Image';
+            const description = listing.description || '';
 
             return (
               <Card key={listingId} className="overflow-hidden">

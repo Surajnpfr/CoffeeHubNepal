@@ -28,8 +28,6 @@ export const ListingCard = ({ listing, onClick }: ListingCardProps) => {
   const imageUrl = listing.images && listing.images.length > 0 
     ? listing.images[0] 
     : listing.image || 'https://via.placeholder.com/400x300?text=No+Image';
-  
-  const displayName = listing.sellerName || listing.user || 'Unknown Seller';
 
   return (
     <Card onClick={onClick} className="group">
