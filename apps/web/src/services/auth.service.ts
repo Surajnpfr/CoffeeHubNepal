@@ -17,6 +17,8 @@ export interface RegisterData {
 interface ApiError {
   error: string;
   code?: string;
+  message?: string;
+  details?: any;
   remainingAttempts?: number;
   unlocksInMs?: number;
 }
