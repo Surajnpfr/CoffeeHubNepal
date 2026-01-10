@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Edit, Trash2, TrendingUp, TrendingDown, Minus, Save, X } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
 import { priceService, Price } from '@/services/price.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -292,7 +291,7 @@ export const Prices = () => {
                         <>
                           <Button
                             variant="primary"
-                            size="sm"
+                            className="px-3 py-1.5"
                             onClick={() => handleSave(priceId)}
                             disabled={saving}
                           >
@@ -300,7 +299,7 @@ export const Prices = () => {
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
+                            className="px-3 py-1.5"
                             onClick={handleCancelEdit}
                             disabled={saving}
                           >
@@ -311,16 +310,15 @@ export const Prices = () => {
                         <>
                           <Button
                             variant="outline"
-                            size="sm"
+                            className="px-3 py-1.5"
                             onClick={() => handleEdit(price)}
                           >
                             <Edit size={14} />
                           </Button>
                           <Button
                             variant="outline"
-                            size="sm"
+                            className="px-3 py-1.5 text-red-600 border-red-600"
                             onClick={() => handleDelete(priceId)}
-                            className="text-red-600 border-red-600"
                           >
                             <Trash2 size={14} />
                           </Button>
