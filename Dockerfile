@@ -18,7 +18,7 @@ COPY apps/web/src ./apps/web/src
 
 # Install dependencies and build web app
 WORKDIR /app/apps/web
-RUN npm ci && npm run build
+RUN npm install && npm run build
 
 # Stage 2: Build API Application
 FROM node:22-alpine AS api-builder
@@ -32,7 +32,7 @@ COPY apps/api/src ./apps/api/src
 
 # Install dependencies and build API
 WORKDIR /app/apps/api
-RUN npm ci && npm run build
+RUN npm install && npm run build
 
 # Stage 3: Production Image
 FROM node:22-alpine
