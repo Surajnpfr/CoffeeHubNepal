@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ArrowLeft, Upload, FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import React from 'react';
 
 interface FarmerVerificationProps {
   onBack?: () => void;
@@ -19,12 +20,44 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
     documents: [] as File[]
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFormData({
         ...formData,
         documents: [...formData.documents, ...Array.from(e.target.files)]
+      });
+    }
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files) {
+      setFormData({
+        ...formData,
+        documents: [...formData.documents, ...Array.from(files)]
       });
     }
   };
@@ -109,10 +142,18 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
               <label className="block text-xs font-black text-gray-600 mb-3 uppercase tracking-tight">
                 Upload Documents
               </label>
-              <div className="border-2 border-dashed border-[#EBE3D5] rounded-2xl p-8 text-center">
-                <Upload className="mx-auto mb-3 text-gray-400" size={32} />
-                <p className="text-xs font-black text-gray-500 mb-2">Upload land ownership, ID, or certificates</p>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
+                  isDragging
+                    ? 'border-[#6F4E37] bg-[#6F4E37]/5'
+                    : 'border-[#EBE3D5] bg-gray-50'
+                }`}
+              >
                 <input
+                  ref={fileInputRef}
                   type="file"
                   multiple
                   accept="image/*,.pdf"
@@ -120,11 +161,23 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
                   className="hidden"
                   id="file-upload"
                 />
-                <label htmlFor="file-upload">
-                  <Button variant="outline" type="button" className="text-xs">
-                    Choose Files
-                  </Button>
-                </label>
+                {isDragging ? (
+                  <>
+                    <Upload className="mx-auto mb-3 text-[#6F4E37]" size={32} />
+                    <p className="text-xs font-black text-[#6F4E37] mb-2">Drop files here</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mx-auto mb-3 text-gray-400" size={32} />
+                    <p className="text-xs font-black text-gray-500 mb-2">Upload land ownership, ID, or certificates</p>
+                    <p className="text-xs text-gray-400 mb-3">Drag and drop files here or click to browse</p>
+                    <label htmlFor="file-upload">
+                      <Button variant="outline" type="button" className="text-xs cursor-pointer">
+                        Choose Files
+                      </Button>
+                    </label>
+                  </>
+                )}
               </div>
 
               {formData.documents.length > 0 && (
