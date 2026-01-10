@@ -1,17 +1,40 @@
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Home, Briefcase } from 'lucide-react';
 import { JobCard } from '@/components/cards/JobCard';
-import { MOCK_JOBS } from '@/utils/mockData';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
+import { jobService, Job } from '@/services/job.service';
 import { t } from '@/i18n';
 
 export const Jobs = () => {
   const { navigate, setCurrentPage, language } = useApp();
   const { isAuthenticated } = useAuth();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const handleJobClick = (id: number) => {
-    navigate('job-detail', id);
+  useEffect(() => {
+    loadJobs();
+  }, []);
+
+  const loadJobs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await jobService.getJobs({ limit: 100 });
+      setJobs(result.jobs);
+    } catch (err: any) {
+      console.error('Failed to load jobs:', err);
+      setError(err.message || 'Failed to load jobs');
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleJobClick = (id: string | number) => {
+    navigate('job-detail', typeof id === 'string' ? id : id.toString());
   };
 
   return (
@@ -48,11 +71,30 @@ export const Jobs = () => {
           </Button>
         </div>
       </div>
-      <div className="space-y-4">
-        {MOCK_JOBS.map(job => (
-          <JobCard key={job.id} job={job} onApply={() => handleJobClick(job.id)} />
-        ))}
-      </div>
+      
+      {loading && (
+        <div className="text-center py-8 text-gray-500">Loading jobs...</div>
+      )}
+      
+      {error && (
+        <div className="text-center py-8 text-red-500">{error}</div>
+      )}
+      
+      {!loading && !error && jobs.length === 0 && (
+        <div className="text-center py-8 text-gray-500">No jobs available</div>
+      )}
+      
+      {!loading && !error && (
+        <div className="space-y-4">
+          {jobs.map(job => (
+            <JobCard 
+              key={job._id || job.id} 
+              job={job} 
+              onApply={() => handleJobClick(job._id || job.id || '')} 
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

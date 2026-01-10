@@ -1,28 +1,45 @@
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus, Filter, Download, ArrowLeft, Home } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { MOCK_PRICES } from '@/utils/mockData';
 import { useApp } from '@/context/AppContext';
+import { priceService, Price } from '@/services/price.service';
 import { t } from '@/i18n';
 
 export const PriceBoard = () => {
   const { setCurrentPage, language } = useApp();
+  const [prices, setPrices] = useState<Price[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const allPrices = [
-    ...MOCK_PRICES,
-    { variety: "Robusta Parchment", price: 420, change: "+1.8%", trend: "up" as const },
-    { variety: "Green Beans (B)", price: 850, change: "-0.3%", trend: "down" as const },
-    { variety: "Roasted Beans", price: 1200, change: "+3.2%", trend: "up" as const },
-    { variety: "Coffee Cherries", price: 75, change: "0.0%", trend: "stable" as const }
-  ];
+  useEffect(() => {
+    loadPrices();
+  }, []);
+
+  const loadPrices = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await priceService.getPrices();
+      setPrices(data);
+    } catch (err: any) {
+      console.error('Failed to load prices:', err);
+      setError(err.message || 'Failed to load prices');
+      setPrices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDownload = () => {
+    if (prices.length === 0) return;
+    
     // Create CSV content
     const headers = ['Variety', 'Price (रू per kg)', 'Change', 'Trend'];
-    const rows = allPrices.map(price => [
+    const rows = prices.map(price => [
       price.variety,
       price.price.toString(),
-      price.change,
+      price.change || '0.0%',
       price.trend
     ]);
 
@@ -89,31 +106,45 @@ export const PriceBoard = () => {
           <span className="text-xs font-bold text-gray-400">{t(language, 'priceBoard.updatedJustNow')}</span>
         </div>
 
-        <div className="space-y-3">
-          {allPrices.map((price, idx) => (
-            <div 
-              key={idx}
-              className="flex items-center justify-between p-4 bg-[#F8F5F2] rounded-2xl border border-[#EBE3D5] hover:border-[#6F4E37] transition-colors"
-            >
-              <div className="flex-1">
-                <h4 className="font-black text-base mb-1">{price.variety}</h4>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-black text-[#3A7D44]">रू {price.price}</span>
-                  <span className={`text-xs font-black flex items-center gap-1 ${
-                    price.trend === 'up' ? 'text-green-600' : 
-                    price.trend === 'down' ? 'text-red-500' : 
-                    'text-gray-500'
-                  }`}>
-                    {price.trend === 'up' && <TrendingUp size={14} />}
-                    {price.trend === 'down' && <TrendingDown size={14} />}
-                    {price.trend === 'stable' && <Minus size={14} />}
-                    {price.change}
-                  </span>
+        {loading && (
+          <div className="text-center py-8 text-gray-500">Loading prices...</div>
+        )}
+        
+        {error && (
+          <div className="text-center py-8 text-red-500">{error}</div>
+        )}
+        
+        {!loading && !error && prices.length === 0 && (
+          <div className="text-center py-8 text-gray-500">No prices available</div>
+        )}
+        
+        {!loading && !error && (
+          <div className="space-y-3">
+            {prices.map((price) => (
+              <div 
+                key={price._id || price.id}
+                className="flex items-center justify-between p-4 bg-[#F8F5F2] rounded-2xl border border-[#EBE3D5] hover:border-[#6F4E37] transition-colors"
+              >
+                <div className="flex-1">
+                  <h4 className="font-black text-base mb-1">{price.variety}</h4>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-black text-[#3A7D44]">रू {price.price}</span>
+                    <span className={`text-xs font-black flex items-center gap-1 ${
+                      price.trend === 'up' ? 'text-green-600' : 
+                      price.trend === 'down' ? 'text-red-500' : 
+                      'text-gray-500'
+                    }`}>
+                      {price.trend === 'up' && <TrendingUp size={14} />}
+                      {price.trend === 'down' && <TrendingDown size={14} />}
+                      {price.trend === 'stable' && <Minus size={14} />}
+                      {price.change || '0.0%'}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card className="p-6 bg-gradient-to-br from-[#3A7D44] to-[#6F4E37] text-white">

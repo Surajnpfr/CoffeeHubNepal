@@ -21,3 +21,13 @@ export const requireAdminOrModerator = (req: AuthRequest, res: Response, next: N
   next();
 };
 
+export const requireModerator = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.userRole !== 'admin' && req.userRole !== 'moderator') {
+    return res.status(403).json({ 
+      error: 'FORBIDDEN', 
+      message: 'Moderator access required' 
+    });
+  }
+  next();
+};
+

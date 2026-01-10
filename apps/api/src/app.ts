@@ -8,6 +8,9 @@ import { ipRateLimiter } from './middleware/rateLimit.js';
 import authRoutes from './routes/auth.js';
 import blogRoutes from './routes/blog.js';
 import adminRoutes from './routes/admin.js';
+import jobRoutes from './routes/jobs.js';
+import productRoutes from './routes/products.js';
+import priceRoutes from './routes/prices.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,7 +44,9 @@ export const createApp = () => {
     // Only cache GET requests
     if (req.method === 'GET' && !req.path.startsWith('/auth')) {
       // Cache public data for 5 minutes
-      if (req.path.startsWith('/blog') || req.path.startsWith('/admin/stats')) {
+      if (req.path.startsWith('/blog') || req.path.startsWith('/admin/stats') || 
+          req.path.startsWith('/jobs') || req.path.startsWith('/products') || 
+          req.path.startsWith('/prices')) {
         res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
       }
       // Cache health check for 1 minute
@@ -56,6 +61,9 @@ export const createApp = () => {
   app.use('/auth', authRoutes);
   app.use('/blog', blogRoutes);
   app.use('/admin', adminRoutes);
+  app.use('/jobs', jobRoutes);
+  app.use('/products', productRoutes);
+  app.use('/prices', priceRoutes);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
