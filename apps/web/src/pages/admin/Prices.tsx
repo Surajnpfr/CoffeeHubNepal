@@ -109,7 +109,7 @@ export const Prices = () => {
     setIsDraggingEdit(null);
   };
 
-  const handleDrop = (e: React.DragEvent, setImage: (img: string) => void, isEdit: boolean = false, priceId?: string) => {
+  const handleDrop = (e: React.DragEvent, setImage: (img: string) => void, _isEdit: boolean = false, _priceId?: string) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingNew(false);
