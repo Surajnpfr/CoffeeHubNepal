@@ -3,7 +3,6 @@ import { ArrowLeft, Upload, FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
-import React from 'react';
 
 interface FarmerVerificationProps {
   onBack?: () => void;
@@ -21,7 +20,7 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
