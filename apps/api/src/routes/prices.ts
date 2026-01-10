@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { requireModerator } from '../middleware/adminAuth.js';
 import { validate } from '../middleware/validate.js';
+import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
   createPrice,
   getPrices,
@@ -21,7 +22,10 @@ const createPriceSchema = z.object({
 });
 
 const updatePriceSchema = z.object({
-  price: z.number().min(0)
+  price: z.number().min(0).optional(),
+  image: z.string().optional()
+}).refine(data => data.price !== undefined || data.image !== undefined, {
+  message: 'At least price or image must be provided'
 });
 
 // Get all prices (public)
@@ -36,7 +40,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single price (public)
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId(), async (req, res) => {
   try {
     const price = await getPriceById(req.params.id);
     
@@ -76,7 +80,7 @@ router.post('/', authenticate, requireModerator, validate(createPriceSchema), as
 });
 
 // Update price by ID (moderator only)
-router.put('/:id', authenticate, requireModerator, validate(updatePriceSchema), async (req: AuthRequest, res) => {
+router.put('/:id', validateObjectId(), authenticate, requireModerator, validate(updatePriceSchema), async (req: AuthRequest, res) => {
   try {
     const { User } = await import('../models/User.js');
     const user = await User.findById(req.userId).lean();
@@ -134,7 +138,7 @@ router.put('/variety/:variety', authenticate, requireModerator, validate(updateP
 });
 
 // Delete price (moderator only)
-router.delete('/:id', authenticate, requireModerator, async (req: AuthRequest, res) => {
+router.delete('/:id', validateObjectId(), authenticate, requireModerator, async (req: AuthRequest, res) => {
   try {
     await deletePrice(req.params.id);
     return res.json({ message: 'Price deleted successfully' });

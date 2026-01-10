@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { User, UserDocument, UserRole } from '../models/User.js';
+import { escapeRegex } from '../utils/sanitize.js';
 
 export interface UserFilters {
   role?: UserRole;
@@ -25,9 +26,10 @@ export const getAllUsers = async (filters?: UserFilters) => {
   }
   
   if (filters?.search) {
+    const safeSearch = escapeRegex(filters.search);
     query.$or = [
-      { name: { $regex: filters.search, $options: 'i' } },
-      { email: { $regex: filters.search, $options: 'i' } }
+      { name: { $regex: safeSearch, $options: 'i' } },
+      { email: { $regex: safeSearch, $options: 'i' } }
     ];
   }
 

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
   createProduct,
   getProducts,
@@ -45,7 +46,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single product
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId(), async (req, res) => {
   try {
     const product = await getProductById(req.params.id);
     
@@ -130,7 +131,7 @@ router.post('/', authenticate, validate(createProductSchema), async (req: AuthRe
 });
 
 // Update product (auth + owner check)
-router.put('/:id', authenticate, validate(createProductSchema.partial()), async (req: AuthRequest, res) => {
+router.put('/:id', validateObjectId(), authenticate, validate(createProductSchema.partial()), async (req: AuthRequest, res) => {
   try {
     const product = await updateProduct(req.params.id, req.userId!, req.body);
     
@@ -152,7 +153,7 @@ router.put('/:id', authenticate, validate(createProductSchema.partial()), async 
 });
 
 // Delete product (auth + owner check)
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     await deleteProduct(req.params.id, req.userId!);
     return res.json({ message: 'Product deleted successfully' });
@@ -169,7 +170,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Mark product as sold (auth + owner check)
-router.post('/:id/sold', authenticate, async (req: AuthRequest, res) => {
+router.post('/:id/sold', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     const product = await markProductAsSold(req.params.id, req.userId!);
     return res.json(product);

@@ -1,6 +1,7 @@
 import { Job, JobDocument } from '../models/Job.js';
 import { Application, ApplicationDocument, ApplicationStatus } from '../models/Application.js';
 import mongoose from 'mongoose';
+import { escapeRegex } from '../utils/sanitize.js';
 
 export interface CreateJobData {
   title: string;
@@ -52,7 +53,7 @@ export const getJobs = async (filters?: {
   }
 
   if (filters?.location) {
-    query.location = { $regex: filters.location, $options: 'i' };
+    query.location = { $regex: escapeRegex(filters.location), $options: 'i' };
   }
 
   if (filters?.createdBy) {

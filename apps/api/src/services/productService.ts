@@ -1,5 +1,6 @@
 import { Product, ProductDocument } from '../models/Product.js';
 import mongoose from 'mongoose';
+import { escapeRegex } from '../utils/sanitize.js';
 
 export interface CreateProductData {
   title: string;
@@ -80,13 +81,14 @@ export const getProducts = async (filters?: {
   }
 
   if (filters?.location) {
-    query.location = { $regex: filters.location, $options: 'i' };
+    query.location = { $regex: escapeRegex(filters.location), $options: 'i' };
   }
 
   if (filters?.search) {
+    const safeSearch = escapeRegex(filters.search);
     query.$or = [
-      { title: { $regex: filters.search, $options: 'i' } },
-      { description: { $regex: filters.search, $options: 'i' } }
+      { title: { $regex: safeSearch, $options: 'i' } },
+      { description: { $regex: safeSearch, $options: 'i' } }
     ];
   }
 

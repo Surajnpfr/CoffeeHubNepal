@@ -23,13 +23,32 @@ export const createApp = () => {
     contentSecurityPolicy: false, // Allow inline scripts/styles from React build
   }));
   
-  // CORS configuration - allow same-origin when serving static files
+  // CORS configuration
   const isProduction = process.env.NODE_ENV === 'production';
   const staticFilesServed = isProduction; // Always serve static files in production
   
+  // Build allowed origins list
+  const allowedOrigins = [env.clientOrigin];
+  // Add production domain if different from clientOrigin
+  if (isProduction && process.env.PRODUCTION_DOMAIN) {
+    allowedOrigins.push(process.env.PRODUCTION_DOMAIN);
+  }
+  
   app.use(
     cors({
-      origin: staticFilesServed ? true : env.clientOrigin, // Allow same-origin when serving static files
+      origin: (origin, callback) => {
+        // Allow requests with no origin (same-origin, mobile apps, curl)
+        if (!origin || staticFilesServed) {
+          callback(null, true);
+          return;
+        }
+        // Check if origin is in allowed list
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true
     })
   );
@@ -39,20 +58,23 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(ipRateLimiter);
 
-  // Add caching headers for GET requests (except auth endpoints)
+  // Add caching headers for GET requests (public data only)
   app.use((req, res, next) => {
-    // Only cache GET requests
-    if (req.method === 'GET' && !req.path.startsWith('/auth')) {
+    // Only cache GET requests for public data - NOT admin endpoints
+    if (req.method === 'GET' && !req.path.startsWith('/auth') && !req.path.startsWith('/admin')) {
       // Cache public data for 5 minutes
-      if (req.path.startsWith('/blog') || req.path.startsWith('/admin/stats') || 
-          req.path.startsWith('/jobs') || req.path.startsWith('/products') || 
-          req.path.startsWith('/prices')) {
+      if (req.path.startsWith('/blog') || req.path.startsWith('/jobs') || 
+          req.path.startsWith('/products') || req.path.startsWith('/prices')) {
         res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
       }
       // Cache health check for 1 minute
       if (req.path === '/health') {
         res.set('Cache-Control', 'public, max-age=60'); // 1 minute
       }
+    }
+    // Admin endpoints should never be publicly cached
+    if (req.path.startsWith('/admin')) {
+      res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     }
     next();
   });

@@ -8,10 +8,16 @@ const toNumber = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+// Validate required environment variables
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('FATAL: JWT_SECRET environment variable is required in production. Set a strong, random secret.');
+}
+
 export const env = {
   port: toNumber(process.env.PORT, 4000),
   mongoUri: process.env.MONGO_URI ?? '',
-  jwtSecret: process.env.JWT_SECRET ?? 'change-me-in-production',
+  jwtSecret: jwtSecret || 'dev-only-secret-change-in-production',
   clientOrigin: process.env.CLIENT_ORIGIN ?? 'http://localhost:5173',
   rateLimitPerMinute: toNumber(process.env.RATE_LIMIT_PER_MINUTE, 60),
   lockoutThreshold: toNumber(process.env.LOCKOUT_THRESHOLD, 5),

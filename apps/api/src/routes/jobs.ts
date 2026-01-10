@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
   createJob,
   getJobs,
@@ -57,7 +58,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single job
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId(), async (req, res) => {
   try {
     const job = await getJobById(req.params.id);
     
@@ -87,7 +88,7 @@ router.post('/', authenticate, validate(createJobSchema), async (req: AuthReques
 });
 
 // Update job (auth + owner check)
-router.put('/:id', authenticate, validate(createJobSchema.partial()), async (req: AuthRequest, res) => {
+router.put('/:id', validateObjectId(), authenticate, validate(createJobSchema.partial()), async (req: AuthRequest, res) => {
   try {
     const job = await updateJob(req.params.id, req.userId!, req.body);
     
@@ -109,7 +110,7 @@ router.put('/:id', authenticate, validate(createJobSchema.partial()), async (req
 });
 
 // Delete job (auth + owner check)
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     await deleteJob(req.params.id, req.userId!);
     return res.json({ message: 'Job deleted successfully' });
@@ -126,7 +127,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Apply to job (auth required)
-router.post('/:id/apply', authenticate, validate(createApplicationSchema), async (req: AuthRequest, res) => {
+router.post('/:id/apply', validateObjectId(), authenticate, validate(createApplicationSchema), async (req: AuthRequest, res) => {
   try {
     const { User } = await import('../models/User.js');
     const user = await User.findById(req.userId).lean();
@@ -156,7 +157,7 @@ router.post('/:id/apply', authenticate, validate(createApplicationSchema), async
 });
 
 // Get applications for a job (auth + owner check)
-router.get('/:id/applications', authenticate, async (req: AuthRequest, res) => {
+router.get('/:id/applications', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     const applications = await getApplications(req.params.id, req.userId!);
     return res.json(applications);
@@ -170,7 +171,7 @@ router.get('/:id/applications', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Update application status (auth + owner check)
-router.put('/:id/applications/:applicationId', authenticate, validate(updateApplicationStatusSchema), async (req: AuthRequest, res) => {
+router.put('/:id/applications/:applicationId', validateObjectId(['id', 'applicationId']), authenticate, validate(updateApplicationStatusSchema), async (req: AuthRequest, res) => {
   try {
     const application = await updateApplicationStatus(
       req.params.applicationId,

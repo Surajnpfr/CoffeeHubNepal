@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
   createPost,
   getPosts,
@@ -55,7 +56,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single post
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateObjectId(), async (req, res) => {
   try {
     const post = await getPostById(req.params.id);
     
@@ -138,7 +139,7 @@ router.post('/', authenticate, validate(createPostSchema), async (req: AuthReque
 });
 
 // Update post (auth + author check)
-router.put('/:id', authenticate, validate(updatePostSchema), async (req: AuthRequest, res) => {
+router.put('/:id', validateObjectId(), authenticate, validate(updatePostSchema), async (req: AuthRequest, res) => {
   try {
     const post = await updatePost(req.params.id, req.userId!, req.body);
     
@@ -160,7 +161,7 @@ router.put('/:id', authenticate, validate(updatePostSchema), async (req: AuthReq
 });
 
 // Delete post (auth + author check)
-router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     await deletePost(req.params.id, req.userId!);
     return res.json({ message: 'Post deleted successfully' });
@@ -177,7 +178,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Like/Unlike post (auth required)
-router.post('/:id/like', authenticate, async (req: AuthRequest, res) => {
+router.post('/:id/like', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
     const result = await likePost(req.params.id, req.userId!);
     return res.json(result);
@@ -191,7 +192,7 @@ router.post('/:id/like', authenticate, async (req: AuthRequest, res) => {
 });
 
 // Add comment (auth required)
-router.post('/:id/comments', authenticate, validate(commentSchema), async (req: AuthRequest, res) => {
+router.post('/:id/comments', validateObjectId(), authenticate, validate(commentSchema), async (req: AuthRequest, res) => {
   try {
     const post = await addComment(req.params.id, req.userId!, {
       content: req.body.content,
@@ -210,7 +211,7 @@ router.post('/:id/comments', authenticate, validate(commentSchema), async (req: 
 });
 
 // Delete comment (auth + author check)
-router.delete('/:id/comments/:commentId', authenticate, async (req: AuthRequest, res) => {
+router.delete('/:id/comments/:commentId', validateObjectId(['id', 'commentId']), authenticate, async (req: AuthRequest, res) => {
   try {
     await deleteComment(req.params.id, req.params.commentId, req.userId!);
     return res.json({ message: 'Comment deleted successfully' });
@@ -232,7 +233,7 @@ const reportPostSchema = z.object({
   type: z.enum(['spam', 'inappropriate', 'fraud', 'harassment', 'other'])
 });
 
-router.post('/:id/report', authenticate, validate(reportPostSchema), async (req: AuthRequest, res) => {
+router.post('/:id/report', validateObjectId(), authenticate, validate(reportPostSchema), async (req: AuthRequest, res) => {
   try {
     const post = await getPostById(req.params.id);
     if (!post) {
@@ -248,14 +249,14 @@ router.post('/:id/report', authenticate, validate(reportPostSchema), async (req:
 
     const report = await createReport({
       postId: req.params.id,
-      reporterId: user.id,
+      reporterId: user._id.toString(),
       reportedUserId: post.author.toString(),
       reason: req.body.reason,
       type: req.body.type
     });
 
     return res.status(201).json({
-      id: report.id,
+      id: report._id.toString(),
       message: 'Report submitted successfully'
     });
   } catch (error: any) {

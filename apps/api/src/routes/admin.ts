@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { requireAdmin, requireAdminOrModerator } from '../middleware/adminAuth.js';
 import { validate } from '../middleware/validate.js';
+import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
   getAllUsers,
   getUserById,
@@ -46,7 +47,7 @@ router.get('/users', requireAdminOrModerator, async (req: AuthRequest, res) => {
 });
 
 // Get user by ID (admin/moderator)
-router.get('/users/:id', requireAdminOrModerator, async (req: AuthRequest, res) => {
+router.get('/users/:id', validateObjectId(), requireAdminOrModerator, async (req: AuthRequest, res) => {
   try {
     const user = await getUserById(req.params.id);
     if (!user) {
@@ -64,7 +65,7 @@ const updateRoleSchema = z.object({
   role: z.enum(['farmer', 'roaster', 'trader', 'exporter', 'expert', 'admin', 'moderator'])
 });
 
-router.put('/users/:id/role', requireAdmin, validate(updateRoleSchema), async (req: AuthRequest, res) => {
+router.put('/users/:id/role', validateObjectId(), requireAdmin, validate(updateRoleSchema), async (req: AuthRequest, res) => {
   try {
     const { role } = req.body;
     const userId = req.params.id;
@@ -130,7 +131,7 @@ router.get('/pending-verifications', requireAdminOrModerator, async (req: AuthRe
 });
 
 // Verify a user (admin/moderator)
-router.post('/users/:id/verify', requireAdminOrModerator, async (req: AuthRequest, res) => {
+router.post('/users/:id/verify', validateObjectId(), requireAdminOrModerator, async (req: AuthRequest, res) => {
   try {
     const userId = req.params.id;
     const user = await verifyUser(userId, req.userId!);
@@ -160,7 +161,7 @@ const rejectVerificationSchema = z.object({
   reason: z.string().optional()
 });
 
-router.post('/users/:id/reject-verification', requireAdminOrModerator, validate(rejectVerificationSchema), async (req: AuthRequest, res) => {
+router.post('/users/:id/reject-verification', validateObjectId(), requireAdminOrModerator, validate(rejectVerificationSchema), async (req: AuthRequest, res) => {
   try {
     const userId = req.params.id;
     const { reason } = req.body;
@@ -219,7 +220,7 @@ const updateReportSchema = z.object({
   status: z.enum(['pending', 'reviewed', 'dismissed', 'resolved'])
 });
 
-router.put('/reports/:id', requireAdminOrModerator, validate(updateReportSchema), async (req: AuthRequest, res) => {
+router.put('/reports/:id', validateObjectId(), requireAdminOrModerator, validate(updateReportSchema), async (req: AuthRequest, res) => {
   try {
     const { status } = req.body;
     const report = await updateReportStatus(req.params.id, status, req.userId!);
@@ -235,7 +236,7 @@ router.put('/reports/:id', requireAdminOrModerator, validate(updateReportSchema)
 });
 
 // Get reports by post (admin/moderator)
-router.get('/reports/post/:postId', requireAdminOrModerator, async (req: AuthRequest, res) => {
+router.get('/reports/post/:postId', validateObjectId(['postId']), requireAdminOrModerator, async (req: AuthRequest, res) => {
   try {
     const reports = await getReportsByPost(req.params.postId);
     return res.json(reports);

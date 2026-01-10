@@ -19,7 +19,8 @@ const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   name: z.string().optional(),
-  role: z.enum(['farmer', 'roaster', 'trader', 'exporter', 'expert', 'admin', 'moderator']).optional(),
+  // Only allow regular user roles during signup - admin/moderator must be assigned via admin panel
+  role: z.enum(['farmer', 'roaster', 'trader', 'exporter', 'expert']).optional(),
   phone: z.string().optional(),
   location: z.string().optional()
 });
@@ -306,35 +307,6 @@ router.put(
       return res.status(500).json({ 
         error: 'UPDATE_PROFILE_FAILED',
         message: error?.message || 'Failed to update profile. Please try again.' 
-      });
-    }
-  }
-);
-
-// Test email endpoint (for debugging - remove in production)
-router.post(
-  '/test-email',
-  async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    try {
-      const { sendPasswordResetEmail } = await import('../services/emailService.js');
-      // Generate a dummy token for testing
-      const testToken = 'test-token-' + Date.now();
-      await sendPasswordResetEmail(email, testToken);
-      return res.json({ 
-        message: 'Test email sent successfully. Check your inbox and server logs.',
-        success: true
-      });
-    } catch (error: any) {
-      console.error('Test email error:', error);
-      return res.status(500).json({ 
-        error: 'FAILED_TO_SEND_EMAIL',
-        message: error.message || 'Failed to send test email',
-        details: error.response || error.code
       });
     }
   }

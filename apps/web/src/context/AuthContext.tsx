@@ -119,7 +119,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...userData });
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      // Sync updated user data to localStorage for persistence
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
