@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { ArrowLeft, Camera, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ArrowLeft, Camera, X, Upload } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import { compressImage } from '@/utils/imageCompression';
 
 interface CreateListingProps {
   onBack: () => void;
@@ -19,23 +20,99 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
     location: '',
     images: [] as string[]
   });
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = ['Arabica', 'Robusta', 'Gear', 'Equipment', 'Other'];
   const units = ['kg', 'pc', 'bag', 'ton'];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setFormData({
-            ...formData,
-            images: [...formData.images, event.target.result as string]
-          });
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = async (file: File) => {
+    // Limit to 5 images max
+    if (formData.images.length >= 5) {
+      alert('Maximum 5 images allowed per listing');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload only image files');
+      return;
+    }
+
+    // Validate file size (max 10MB before compression)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Compress image (1920x1920 max, quality 0.8, max 1MB per image)
+      const compressedDataUrl = await compressImage(file, 1920, 1920, 0.8, 1000);
+      
+      // Check final size (max 1MB per compressed image)
+      const base64Size = (compressedDataUrl.length * 3) / 4;
+      if (base64Size > 1024 * 1024) {
+        alert('Image is too large even after compression. Please use a smaller image.');
+        setUploading(false);
+        return;
+      }
+
+      setFormData({
+        ...formData,
+        images: [...formData.images, compressedDataUrl]
+      });
+    } catch (error: any) {
+      console.error('Image compression error:', error);
+      alert(error.message || 'Failed to process image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      // Process up to 5 images or remaining slots
+      const remainingSlots = 5 - formData.images.length;
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+      
+      for (const file of filesToProcess) {
+        await handleImageUpload(file);
+      }
+    }
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files) {
+      const remainingSlots = 5 - formData.images.length;
+      const filesToProcess = Array.from(files).slice(0, remainingSlots);
+      
+      for (const file of filesToProcess) {
+        await handleImageUpload(file);
+      }
     }
   };
 
@@ -59,7 +136,7 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-xs font-black text-gray-600 mb-3 uppercase tracking-tight">
-                Photos
+                Photos (Max 5)
               </label>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {formData.images.map((img, idx) => (
@@ -73,24 +150,97 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
                           images: formData.images.filter((_, i) => i !== idx)
                         });
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg hover:bg-red-600 transition-colors"
                     >
                       <X size={14} />
                     </button>
                   </div>
                 ))}
                 {formData.images.length < 5 && (
-                  <label className="aspect-square border-2 border-dashed border-[#EBE3D5] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#6F4E37] transition-colors">
-                    <Camera size={24} className="text-gray-400" />
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                      isDragging
+                        ? 'border-[#6F4E37] bg-[#6F4E37]/5'
+                        : 'border-[#EBE3D5] hover:border-[#6F4E37] bg-gray-50'
+                    } ${uploading ? 'opacity-50' : ''}`}
+                  >
                     <input
+                      ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      onChange={handleImageUpload}
+                      multiple
+                      onChange={handleFileSelect}
                       className="hidden"
                     />
-                  </label>
+                    {isDragging ? (
+                      <>
+                        <Upload size={24} className="text-[#6F4E37] mb-2" />
+                        <span className="text-xs font-bold text-[#6F4E37]">Drop here</span>
+                      </>
+                    ) : (
+                      <>
+                        <Camera size={24} className="text-gray-400 mb-2" />
+                        <span className="text-xs text-gray-500 text-center px-2">
+                          {uploading ? 'Uploading...' : 'Click or drag'}
+                        </span>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="mt-1 text-xs text-[#6F4E37] font-bold hover:underline disabled:opacity-50"
+                    >
+                      Browse
+                    </button>
+                  </div>
                 )}
               </div>
+              {formData.images.length === 0 && (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    isDragging
+                      ? 'border-[#6F4E37] bg-[#6F4E37]/5'
+                      : 'border-[#EBE3D5] bg-gray-50'
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {isDragging ? (
+                    <>
+                      <Upload size={48} className="mx-auto mb-3 text-[#6F4E37]" />
+                      <p className="text-sm font-bold text-[#6F4E37]">Drop images here</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={48} className="mx-auto mb-3 text-gray-400" />
+                      <p className="text-sm font-bold text-gray-700 mb-1">Drag and drop images here</p>
+                      <p className="text-xs text-gray-500 mb-4">or click to browse (Max 5 images, 10MB each)</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        <Camera size={16} className="mr-2" />
+                        Choose Images
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <Input

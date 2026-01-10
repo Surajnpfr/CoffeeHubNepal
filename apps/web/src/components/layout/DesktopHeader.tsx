@@ -12,6 +12,11 @@ export const DesktopHeader = () => {
   const userRole = user?.role || 'farmer';
   const isVerified = user?.verified || false;
   
+  // Get avatar URL - use user's uploaded avatar or fallback to generated avatar
+  const avatarSeed = user?.email || user?.name || 'user';
+  const generatedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
+  const avatarUrl = user?.avatar || generatedAvatarUrl;
+  
   // Role display labels
   const roleLabels: { [key: string]: string } = {
     farmer: 'Farmer',
@@ -19,7 +24,8 @@ export const DesktopHeader = () => {
     trader: 'Trader',
     exporter: 'Exporter',
     expert: 'Expert',
-    admin: 'Admin'
+    admin: 'Admin',
+    moderator: 'Moderator'
   };
   
   const roleLabel = roleLabels[userRole] || 'Member';
@@ -72,9 +78,28 @@ export const DesktopHeader = () => {
             <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white/70 rounded-full"></span>
           </button>
 
-          <button className="flex items-center gap-3 p-2 hover:bg-white/40 backdrop-blur-sm rounded-xl transition-all hover:shadow-sm">
-            <div className="w-10 h-10 bg-coffee-dark border border-coffee-dark rounded-md flex items-center justify-center text-white font-heading font-semibold">
-              {displayName.charAt(0).toUpperCase()}
+          <button 
+            onClick={() => setCurrentPage('profile')}
+            className="flex items-center gap-3 p-2 hover:bg-white/40 backdrop-blur-sm rounded-xl transition-all hover:shadow-sm"
+          >
+            <div className="w-10 h-10 bg-coffee-dark border border-coffee-dark rounded-md overflow-hidden flex items-center justify-center">
+              {user?.avatar ? (
+                <img 
+                  src={avatarUrl} 
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to generated avatar if image fails to load
+                    (e.target as HTMLImageElement).src = generatedAvatarUrl;
+                  }}
+                />
+              ) : (
+                <img 
+                  src={generatedAvatarUrl} 
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="text-left hidden lg:block">
               <p className="text-sm font-heading font-semibold text-coffee-dark">{displayName}</p>
