@@ -3,7 +3,7 @@ import { Card } from '@/components/common/Card';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
-import logoImage from '@/assets/images/team/coffeelogo.webp';
+import bannerImage from './Banner.webp';
 import surajNepalImage from '@/assets/images/team/SurajNepal.webp';
 import SarthakBhattaraiImage from '@/assets/images/team/SarthakBhattarai.webp';
 import KrrishNyopaneImage from '@/assets/images/team/KrrishNyoupane.webp';
@@ -46,20 +46,14 @@ export const AboutUs = () => {
       </div>
 
       <div className="p-6 lg:p-8 lg:max-w-5xl lg:mx-auto space-y-8">
-        {/* Hero Section */}
-        <Card className="p-8 lg:p-12 bg-gradient-to-br from-[#6F4E37] to-[#4E3626] text-white border-none">
-          <div className="flex flex-col lg:flex-row items-center gap-8">
-            <div className="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-sm p-4 flex items-center justify-center border-4 border-white/20">
-              <img src={logoImage} alt="CoffeeHubNepal Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-4xl font-black mb-4">CoffeeHubNepal</h1>
-              <p className="text-lg text-white/90 leading-relaxed">
-                {t(language, 'about.tagline')}
-              </p>
-            </div>
-          </div>
-        </Card>
+        {/* Banner Section */}
+        <div className="w-full rounded-2xl overflow-hidden shadow-lg">
+          <img 
+            src={bannerImage} 
+            alt="CoffeeHubNepal Banner" 
+            className="w-full h-auto object-cover"
+          />
+        </div>
 
         {/* Mission & Vision */}
         <div className="grid lg:grid-cols-2 gap-6">
