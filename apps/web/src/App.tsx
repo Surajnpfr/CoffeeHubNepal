@@ -74,6 +74,18 @@ const AppContent = () => {
     }
   }, [user, setUserRole]);
 
+  // Redirect unauthenticated users from protected pages
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      const protectedPages = ['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+      // Redirect if trying to access protected page (home is handled separately - shows landing page)
+      if (protectedPages.includes(currentPage) && !subPage) {
+        setCurrentPage('home');
+        setSubPage('login');
+      }
+    }
+  }, [isAuthenticated, isLoading, currentPage, subPage, setCurrentPage, setSubPage]);
+
   // Handle URL-based navigation for reset password and complete signup (from email links)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -156,15 +168,14 @@ const AppContent = () => {
     );
   }
 
-  // Public pages (accessible without login) - render independently
-  const publicPages = ['about', 'contact', 'faq', 'privacy', 'terms'];
+  // Public pages (accessible without login) - only: about, contact, privacy, terms
+  const publicPages = ['about', 'contact', 'privacy', 'terms'];
   if (!isAuthenticated && subPage && publicPages.includes(subPage)) {
     return (
       <div className="min-h-screen bg-[#F8F5F2]">
         <Suspense fallback={<PageLoader />}>
           {subPage === 'about' && <AboutUs />}
           {subPage === 'contact' && <ContactUs />}
-          {subPage === 'faq' && <FAQ />}
           {subPage === 'privacy' && <PrivacyPolicy />}
           {subPage === 'terms' && <TermsOfService />}
         </Suspense>
@@ -180,6 +191,14 @@ const AppContent = () => {
   // Redirect authenticated users from landing to home content
   if (currentPage === 'home' && isAuthenticated && !subPage) {
     // Will fall through to render Home component below
+  }
+
+  // Protected pages - require authentication
+  // useEffect above handles redirect, but show loading if somehow we're still on protected page
+  const protectedPages = ['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+  if (!isAuthenticated && protectedPages.includes(currentPage) && !subPage) {
+    // Show loading while redirect happens (useEffect will handle redirect)
+    return <PageLoader />;
   }
 
   // Auth pages (always full screen) - wrapped in Suspense for lazy loading
@@ -233,6 +252,23 @@ const AppContent = () => {
 
   // Render sub-page content - wrapped in Suspense for lazy loading
   const renderSubPage = () => {
+    // Protected sub-pages that require authentication
+    const protectedSubPages = [
+      'blog-detail', 'create-blog', 'edit-blog',
+      'create-listing', 'listing-detail',
+      'notice-detail', 'create-notice',
+      'job-detail', 'create-job',
+      'event-detail',
+      'my-listings', 'my-jobs', 'certifications', 'settings'
+    ];
+
+    // Check if trying to access protected sub-page without authentication
+    if (!isAuthenticated && subPage && protectedSubPages.includes(subPage)) {
+      setCurrentPage('home');
+      setSubPage('login');
+      return null;
+    }
+
     const content = (() => {
       if (subPage === 'blog-detail') {
         const postId = sessionStorage.getItem('blogDetailId') || (selectedId ? selectedId.toString() : '');
@@ -264,7 +300,6 @@ const AppContent = () => {
       if (subPage === 'settings') return <Settings />;
       if (subPage === 'about') return <AboutUs />;
       if (subPage === 'contact') return <ContactUs />;
-      if (subPage === 'faq') return <FAQ />;
       if (subPage === 'privacy') return <PrivacyPolicy />;
       if (subPage === 'terms') return <TermsOfService />;
       return null;
@@ -308,19 +343,18 @@ const AppContent = () => {
           <main className="flex-1 overflow-y-auto">
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl xl:max-w-7xl 2xl:max-w-[1440px] mx-auto">
               <Suspense fallback={<PageLoader />}>
-                {currentPage === 'home' && <Home onNavigate={(page) => {
+                {currentPage === 'home' && isAuthenticated && <Home onNavigate={(page) => {
                   setCurrentPage(page);
                 }} />}
-                {currentPage === 'market' && <Marketplace />}
-                {currentPage === 'jobs' && <Jobs />}
-                {currentPage === 'profile' && <Profile />}
-                {currentPage === 'notices' && <Notices />}
-                {currentPage === 'blog' && <BlogList />}
-                {currentPage === 'prices' && <PriceBoard />}
-                {currentPage === 'events' && <Events />}
+                {currentPage === 'market' && isAuthenticated && <Marketplace />}
+                {currentPage === 'jobs' && isAuthenticated && <Jobs />}
+                {currentPage === 'profile' && isAuthenticated && <Profile />}
+                {currentPage === 'notices' && isAuthenticated && <Notices />}
+                {currentPage === 'blog' && isAuthenticated && <BlogList />}
+                {currentPage === 'prices' && isAuthenticated && <PriceBoard />}
+                {currentPage === 'events' && isAuthenticated && <Events />}
                 {currentPage === 'about' && <AboutUs />}
                 {currentPage === 'contact' && <ContactUs />}
-                {currentPage === 'faq' && <FAQ />}
                 {currentPage === 'privacy' && <PrivacyPolicy />}
                 {currentPage === 'terms' && <TermsOfService />}
               </Suspense>
@@ -360,19 +394,18 @@ const AppContent = () => {
       <main className="min-h-screen">
         <div className="px-4 py-4 space-y-4">
           <Suspense fallback={<PageLoader />}>
-            {currentPage === 'home' && <Home onNavigate={(page) => {
+            {currentPage === 'home' && isAuthenticated && <Home onNavigate={(page) => {
               setCurrentPage(page);
             }} />}
-            {currentPage === 'market' && <Marketplace />}
-            {currentPage === 'jobs' && <Jobs />}
-            {currentPage === 'profile' && <Profile />}
-            {currentPage === 'notices' && <Notices />}
-            {currentPage === 'blog' && <BlogList />}
-            {currentPage === 'prices' && <PriceBoard />}
-            {currentPage === 'events' && <Events />}
+            {currentPage === 'market' && isAuthenticated && <Marketplace />}
+            {currentPage === 'jobs' && isAuthenticated && <Jobs />}
+            {currentPage === 'profile' && isAuthenticated && <Profile />}
+            {currentPage === 'notices' && isAuthenticated && <Notices />}
+            {currentPage === 'blog' && isAuthenticated && <BlogList />}
+            {currentPage === 'prices' && isAuthenticated && <PriceBoard />}
+            {currentPage === 'events' && isAuthenticated && <Events />}
             {currentPage === 'about' && <AboutUs />}
             {currentPage === 'contact' && <ContactUs />}
-            {currentPage === 'faq' && <FAQ />}
             {currentPage === 'privacy' && <PrivacyPolicy />}
             {currentPage === 'terms' && <TermsOfService />}
           </Suspense>

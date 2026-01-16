@@ -1,5 +1,6 @@
 import { Calendar, DollarSign, Briefcase } from 'lucide-react'; // Keep these for now - no exact matches
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Icon } from '@/components/common/Icon';
 import logoImage from '@/assets/images/logo/coffeelogo.png';
@@ -10,7 +11,8 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
-  const { currentPage, setCurrentPage, language } = useApp();
+  const { currentPage, setCurrentPage, setSubPage, language } = useApp();
+  const { isAuthenticated } = useAuth();
 
   const mainTabs: Array<{
     id: string;
@@ -28,12 +30,22 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
     { id: 'profile', iconName: 'Sidebar_User_20', label: t(language, 'nav.profile') }
   ];
 
+  const handlePageClick = (page: string) => {
+    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+    if (!isAuthenticated && protectedPages.includes(page)) {
+      setCurrentPage('home');
+      setSubPage('login');
+    } else {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <aside className="w-60 xl:w-64 bg-coffee-beige border-r-2 border-coffee-dark/30 h-screen sticky top-0 flex flex-col">
       {/* Logo Section */}
       <div className="p-4 lg:p-6 border-b border-coffee-dark/20">
         <button 
-          onClick={() => setCurrentPage('home')}
+          onClick={() => handlePageClick('home')}
           className="flex items-center gap-3 mb-4 w-full"
         >
           <div className="w-12 h-12 rounded-md border border-coffee-dark/20 flex items-center justify-center overflow-hidden">
@@ -48,36 +60,76 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
             <p className="text-[9px] font-body font-semibold text-[#3A7D44] uppercase tracking-widest">Nepal Platform</p>
           </div>
         </button>
-        <Button 
-          variant="primary" 
-          className="w-full"
-          onClick={onMenuOpen}
-        >
-          <Icon name="Sidebar_Create_Plus_18" size={18} /> {t(language, 'nav.createNew')}
-        </Button>
+        {isAuthenticated && (
+          <Button 
+            variant="primary" 
+            className="w-full"
+            onClick={onMenuOpen}
+          >
+            <Icon name="Sidebar_Create_Plus_18" size={18} /> {t(language, 'nav.createNew')}
+          </Button>
+        )}
+        {!isAuthenticated && (
+          <Button 
+            variant="primary" 
+            className="w-full"
+            onClick={() => {
+              setCurrentPage('home');
+              setSubPage('login');
+            }}
+          >
+            Sign In
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-3 lg:p-4">
         <div className="space-y-1">
-          {mainTabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setCurrentPage(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
-                currentPage === tab.id
-                  ? 'bg-coffee-dark text-white border-coffee-dark font-heading font-semibold'
-                  : 'text-coffee-dark/70 border-transparent hover:bg-white/50 hover:border-coffee-dark/20 font-body font-medium'
-              }`}
-            >
-              {tab.iconName ? (
-                <Icon name={tab.iconName} size={20} />
-              ) : (
-                tab.icon && <tab.icon size={20} />
-              )}
-              <span className="text-sm">{tab.label}</span>
-            </button>
-          ))}
+          {isAuthenticated ? (
+            mainTabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => handlePageClick(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
+                  currentPage === tab.id
+                    ? 'bg-coffee-dark text-white border-coffee-dark font-heading font-semibold'
+                    : 'text-coffee-dark/70 border-transparent hover:bg-white/50 hover:border-coffee-dark/20 font-body font-medium'
+                }`}
+              >
+                {tab.iconName ? (
+                  <Icon name={tab.iconName} size={20} />
+                ) : (
+                  tab.icon && <tab.icon size={20} />
+                )}
+                <span className="text-sm">{tab.label}</span>
+              </button>
+            ))
+          ) : (
+            // Show only public pages for unauthenticated users
+            <>
+              <button
+                onClick={() => handlePageClick('about')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
+                  currentPage === 'about'
+                    ? 'bg-coffee-dark text-white border-coffee-dark font-heading font-semibold'
+                    : 'text-coffee-dark/70 border-transparent hover:bg-white/50 hover:border-coffee-dark/20 font-body font-medium'
+                }`}
+              >
+                <span className="text-sm">{t(language, 'nav.about')}</span>
+              </button>
+              <button
+                onClick={() => handlePageClick('contact')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-md border transition-all ${
+                  currentPage === 'contact'
+                    ? 'bg-coffee-dark text-white border-coffee-dark font-heading font-semibold'
+                    : 'text-coffee-dark/70 border-transparent hover:bg-white/50 hover:border-coffee-dark/20 font-body font-medium'
+                }`}
+              >
+                <span className="text-sm">{t(language, 'nav.contact')}</span>
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -88,20 +140,20 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
           <Button 
             variant="outline" 
             className="w-full text-xs py-2"
-            onClick={() => setCurrentPage('contact')}
+            onClick={() => handlePageClick('contact')}
           >
             {t(language, 'nav.contactSupport')}
           </Button>
         </div>
         <div className="space-y-1">
           <button
-            onClick={() => setCurrentPage('about')}
+            onClick={() => handlePageClick('about')}
             className="w-full text-left px-3 py-2 text-xs text-coffee-dark/70 hover:bg-white/50 rounded-md border border-transparent hover:border-coffee-dark/20 transition-colors"
           >
             {t(language, 'nav.about')}
           </button>
           <button
-            onClick={() => setCurrentPage('contact')}
+            onClick={() => handlePageClick('contact')}
             className="w-full text-left px-3 py-2 text-xs text-coffee-dark/70 hover:bg-white/50 rounded-md border border-transparent hover:border-coffee-dark/20 transition-colors"
           >
             {t(language, 'nav.contact')}
@@ -111,4 +163,3 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
     </aside>
   );
 };
-

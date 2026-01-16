@@ -1,4 +1,5 @@
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
 import { Icon } from '@/components/common/Icon';
 
@@ -10,6 +11,7 @@ interface BottomNavProps {
 
 export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavProps) => {
   const { language } = useApp();
+  const { isAuthenticated } = useAuth();
   
   const tabs = [
     { id: 'home', iconName: 'BottomNav_Home_22', label: t(language, 'nav.home') },
@@ -18,6 +20,11 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
     { id: 'notices', iconName: 'BottomNav_Bell_22', label: t(language, 'nav.alerts') },
     { id: 'profile', iconName: 'BottomNav_User_22', label: t(language, 'nav.profile') }
   ];
+
+  // Only show navigation tabs if authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-2xl bg-coffee-beige/95 backdrop-blur-sm border-t-2 border-coffee-dark/30 px-6 pt-4 pb-10 z-50">

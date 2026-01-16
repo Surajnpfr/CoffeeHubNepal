@@ -1,15 +1,27 @@
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Icon } from '@/components/common/Icon';
 import logoImage from '@/assets/images/logo/coffeelogo.png';
 
 export const Header = () => {
-  const { setCurrentPage, language, setLanguage } = useApp();
+  const { setCurrentPage, setSubPage, language, setLanguage } = useApp();
+  const { isAuthenticated } = useAuth();
+
+  const handlePageClick = (page: string) => {
+    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+    if (!isAuthenticated && protectedPages.includes(page)) {
+      setCurrentPage('home');
+      setSubPage('login');
+    } else {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-coffee-dark/20 shadow-sm px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button 
-          onClick={() => setCurrentPage('home')}
+          onClick={() => handlePageClick('home')}
           className="flex items-center gap-3"
         >
           <div className="w-10 h-10 rounded-md border border-coffee-dark/20 flex items-center justify-center overflow-hidden">
@@ -51,13 +63,23 @@ export const Header = () => {
         <button className="p-2.5 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark transition-all hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm">
           <Icon name="Header_Search_20" size={20} />
         </button>
-        <button 
-          onClick={() => setCurrentPage('notices')}
-          className="p-2.5 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark relative transition-all hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm"
-        >
-          <Icon name="Header_Bell_20" size={20} />
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-        </button>
+        {isAuthenticated && (
+          <button 
+            onClick={() => handlePageClick('notices')}
+            className="p-2.5 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark relative transition-all hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm"
+          >
+            <Icon name="Header_Bell_20" size={20} />
+            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+          </button>
+        )}
+        {!isAuthenticated && (
+          <button 
+            onClick={() => handlePageClick('contact')}
+            className="p-2.5 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark transition-all hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm"
+          >
+            <span className="text-xs font-semibold">Contact</span>
+          </button>
+        )}
       </div>
     </header>
   );

@@ -4,8 +4,18 @@ import { Icon } from '@/components/common/Icon';
 import { t } from '@/i18n';
 
 export const DesktopHeader = () => {
-  const { setCurrentPage, language, setLanguage, navigate } = useApp();
-  const { user } = useAuth();
+  const { setCurrentPage, setSubPage, language, setLanguage, navigate } = useApp();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePageClick = (page: string) => {
+    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+    if (!isAuthenticated && protectedPages.includes(page)) {
+      setCurrentPage('home');
+      setSubPage('login');
+    } else {
+      setCurrentPage(page);
+    }
+  };
   
   // Get user display name and role
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
@@ -70,18 +80,20 @@ export const DesktopHeader = () => {
               ने
             </button>
           </div>
-          <button 
-            onClick={() => setCurrentPage('notices')}
-            className="relative p-2 sm:p-3 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-          >
-            <Icon name="DesktopHeader_Bell_20" size={20} />
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white/70 rounded-full"></span>
-          </button>
+          {isAuthenticated && (
+            <>
+              <button 
+                onClick={() => handlePageClick('notices')}
+                className="relative p-2 sm:p-3 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <Icon name="DesktopHeader_Bell_20" size={20} />
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white/70 rounded-full"></span>
+              </button>
 
-          <button 
-            onClick={() => setCurrentPage('profile')}
-            className="flex items-center gap-2 sm:gap-3 p-2 hover:bg-white/40 backdrop-blur-sm rounded-xl transition-all hover:shadow-sm min-h-[44px]"
-          >
+              <button 
+                onClick={() => handlePageClick('profile')}
+                className="flex items-center gap-2 sm:gap-3 p-2 hover:bg-white/40 backdrop-blur-sm rounded-xl transition-all hover:shadow-sm min-h-[44px]"
+              >
             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-coffee-dark border border-coffee-dark rounded-md overflow-hidden flex items-center justify-center">
               {user?.avatar ? (
                 <img 
@@ -107,18 +119,31 @@ export const DesktopHeader = () => {
                 {isVerified ? `Verified ${roleLabel}` : roleLabel}
               </p>
             </div>
-          </button>
+              </button>
 
-          <button 
-            onClick={() => {
-              setCurrentPage('profile');
-              navigate('settings');
-            }}
-            className="p-2 sm:p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-coffee-dark/10 text-coffee-dark hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-            title="Settings"
-          >
-            <Icon name="DesktopHeader_Settings_20" size={20} />
-          </button>
+              <button 
+                onClick={() => {
+                  setCurrentPage('profile');
+                  navigate('settings');
+                }}
+                className="p-2 sm:p-3 bg-white/50 backdrop-blur-sm rounded-xl border border-coffee-dark/10 text-coffee-dark hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+                title="Settings"
+              >
+                <Icon name="DesktopHeader_Settings_20" size={20} />
+              </button>
+            </>
+          )}
+          {!isAuthenticated && (
+            <button 
+              onClick={() => {
+                setCurrentPage('home');
+                setSubPage('login');
+              }}
+              className="px-4 py-2 bg-coffee-dark text-white rounded-md hover:bg-coffee-dark/90 transition-all text-sm font-semibold"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </div>
     </header>

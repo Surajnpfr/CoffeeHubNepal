@@ -431,10 +431,10 @@ export const LandingPage = () => {
             <div>
               <h4 className="font-heading font-semibold text-sm mb-4 text-coffee-dark">Platform</h4>
               <ul className="space-y-2 text-xs font-body text-coffee-dark/70">
-                <li><button onClick={() => navigate('market')} className="hover:text-coffee-dark transition-colors">Marketplace</button></li>
-                <li><button onClick={() => navigate('blog')} className="hover:text-coffee-dark transition-colors">Blog</button></li>
-                <li><button onClick={() => navigate('jobs')} className="hover:text-coffee-dark transition-colors">Job Board</button></li>
-                <li><button onClick={() => navigate('prices')} className="hover:text-coffee-dark transition-colors">Price Board</button></li>
+                <li><button onClick={() => navigate('login')} className="hover:text-coffee-dark transition-colors">Marketplace</button></li>
+                <li><button onClick={() => navigate('login')} className="hover:text-coffee-dark transition-colors">Blog</button></li>
+                <li><button onClick={() => navigate('login')} className="hover:text-coffee-dark transition-colors">Job Board</button></li>
+                <li><button onClick={() => navigate('login')} className="hover:text-coffee-dark transition-colors">Price Board</button></li>
               </ul>
             </div>
             <div>
@@ -442,7 +442,6 @@ export const LandingPage = () => {
               <ul className="space-y-2 text-xs font-body text-coffee-dark/70">
                 <li><button onClick={() => navigate('about')} className="hover:text-coffee-dark transition-colors">About Us</button></li>
                 <li><button onClick={() => navigate('contact')} className="hover:text-coffee-dark transition-colors">Contact</button></li>
-                <li><button onClick={() => navigate('faq')} className="hover:text-coffee-dark transition-colors">FAQ</button></li>
               </ul>
             </div>
             <div>
