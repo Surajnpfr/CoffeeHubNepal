@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, Search } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -110,13 +110,16 @@ export const Marketplace = () => {
 
         <Card className="p-6">
           <div className="flex gap-4 mb-6">
-            <div className="flex-1">
+            <div className="flex-1 relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <Search size={18} />
+              </div>
               <Input
                 type="text"
                 placeholder="Search listings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search size={18} />}
+                className="pl-12"
               />
             </div>
           </div>
@@ -177,35 +180,38 @@ export const Marketplace = () => {
 
       <ConfirmDialog
         isOpen={showRemoveDialog}
-        onClose={() => {
+        onCancel={() => {
           setShowRemoveDialog(false);
           setSelectedListing(null);
           setRemoveReason('');
         }}
         onConfirm={handleRemove}
         title="Remove Listing"
-        message={`Are you sure you want to remove "${selectedListing?.title}"? The seller will be notified with the reason you provide.`}
+        message={
+          <div className="space-y-4">
+            <p>Are you sure you want to remove "{selectedListing?.title}"? The seller will be notified with the reason you provide.</p>
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold text-gray-700">
+                Reason for Removal <span className="text-red-500">*</span>
+              </label>
+              <Textarea
+                value={removeReason}
+                onChange={(e) => setRemoveReason(e.target.value)}
+                placeholder="Enter the reason for removing this listing (this will be sent to the seller)..."
+                rows={4}
+                maxLength={500}
+                required
+              />
+              <p className="text-xs text-gray-500">
+                This reason will be sent to the seller via notification.
+              </p>
+            </div>
+          </div>
+        }
         confirmText="Remove Listing"
-        confirmVariant="danger"
+        variant="danger"
         isLoading={isRemoving}
-      >
-        <div className="mt-4 space-y-3">
-          <label className="block text-sm font-semibold text-gray-700">
-            Reason for Removal <span className="text-red-500">*</span>
-          </label>
-          <Textarea
-            value={removeReason}
-            onChange={(e) => setRemoveReason(e.target.value)}
-            placeholder="Enter the reason for removing this listing (this will be sent to the seller)..."
-            rows={4}
-            maxLength={500}
-            required
-          />
-          <p className="text-xs text-gray-500">
-            This reason will be sent to the seller via notification.
-          </p>
-        </div>
-      </ConfirmDialog>
+      />
     </div>
   );
 };
