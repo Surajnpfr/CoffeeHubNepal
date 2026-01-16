@@ -1,7 +1,8 @@
-import { ArrowLeft, Bell, Moon, Shield, Trash2, User, Info, MessageCircle, FileText } from 'lucide-react';
+import { ArrowLeft, Shield, User, Info, MessageCircle, FileText, LogOut } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/auth.service';
@@ -9,13 +10,12 @@ import { useState, useEffect } from 'react';
 import { t } from '@/i18n';
 
 export const Settings = () => {
-  const { setCurrentPage, setSubPage, language, setLanguage } = useApp();
-  const { user, updateUser } = useAuth();
-  const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const { setCurrentPage, setSubPage, language, setLanguage, setUserRole, navigate } = useApp();
+  const { user, updateUser, logout: authLogout } = useAuth();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Check if user can edit name (only before verification, except mods/admins)
   const isModOrAdmin = user?.role === 'admin' || user?.role === 'moderator';
@@ -139,53 +139,10 @@ export const Settings = () => {
           </div>
         </Card>
 
-        {/* Notifications */}
-        <Card className="p-6">
-          <h3 className="font-black text-lg mb-4 flex items-center gap-2">
-            <Bell size={20} className="text-[#6F4E37]" />
-            {t(language, 'settings.notifications')}
-          </h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-black text-sm">{t(language, 'settings.pushNotifications')}</p>
-                <p className="text-xs text-gray-500">{t(language, 'settings.pushNotificationsDesc')}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={notifications}
-                  onChange={(e) => setNotifications(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6F4E37]"></div>
-              </label>
-            </div>
-            <div className="space-y-2 text-sm">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" defaultChecked />
-                <span>{t(language, 'settings.newMessages')}</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" defaultChecked />
-                <span>{t(language, 'settings.jobOpportunities')}</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" defaultChecked />
-                <span>{t(language, 'settings.priceAlerts')}</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded" />
-                <span>{t(language, 'settings.marketingEmails')}</span>
-              </label>
-            </div>
-          </div>
-        </Card>
-
         {/* Preferences */}
         <Card className="p-6">
           <h3 className="font-black text-lg mb-4 flex items-center gap-2">
-            <Moon size={20} className="text-[#6F4E37]" />
+            <User size={20} className="text-[#6F4E37]" />
             {t(language, 'settings.preferences')}
           </h3>
           <div className="space-y-4">
@@ -202,40 +159,6 @@ export const Settings = () => {
                 <option value="ne">{t(language, 'settings.languageNepali')}</option>
               </select>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-black text-sm">{t(language, 'settings.darkMode')}</p>
-                <p className="text-xs text-gray-500">{t(language, 'settings.darkModeDesc')}</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={darkMode}
-                  onChange={(e) => setDarkMode(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#6F4E37]"></div>
-              </label>
-            </div>
-          </div>
-        </Card>
-
-        {/* Privacy & Security */}
-        <Card className="p-6">
-          <h3 className="font-black text-lg mb-4 flex items-center gap-2">
-            <Shield size={20} className="text-[#6F4E37]" />
-            {t(language, 'settings.privacySecurity')}
-          </h3>
-          <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              {t(language, 'settings.changePassword')}
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              {t(language, 'settings.twoFactorAuth')}
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              {t(language, 'settings.privacySettings')}
-            </Button>
           </div>
         </Card>
 
@@ -309,20 +232,34 @@ export const Settings = () => {
           </div>
         </Card>
 
-        {/* Danger Zone */}
-        <Card className="p-6 border-red-200">
-          <h3 className="font-black text-lg mb-4 text-red-600 flex items-center gap-2">
-            <Trash2 size={20} />
-            {t(language, 'settings.dangerZone')}
-          </h3>
-          <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start text-red-600 border-red-200">
-              {t(language, 'settings.deleteAccount')}
-            </Button>
-            <p className="text-xs text-gray-500">{t(language, 'settings.deleteAccountWarning')}</p>
-          </div>
+        {/* Logout */}
+        <Card className="p-6">
+          <Button
+            variant="outline"
+            className="w-full py-4 text-red-600 border-red-200 bg-red-50/20 hover:bg-red-100"
+            onClick={() => setShowLogoutConfirm(true)}
+          >
+            <LogOut size={18} /> Log Out
+          </Button>
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Confirm Logout"
+        message="Are you sure you want to log out? You'll need to sign in again to access your account."
+        confirmText="Log Out"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={async () => {
+          await authLogout();
+          setUserRole('farmer');
+          setCurrentPage('home');
+          navigate('login');
+          setShowLogoutConfirm(false);
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 };
