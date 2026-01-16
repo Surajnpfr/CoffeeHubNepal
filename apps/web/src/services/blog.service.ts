@@ -102,6 +102,7 @@ export const blogService = {
     author?: string;
     page?: number;
     limit?: number;
+    forceRefresh?: boolean; // Add option to force refresh
   }): Promise<BlogListResponse> {
     const params = new URLSearchParams();
     if (filters?.category) params.append('category', filters.category);
@@ -112,11 +113,14 @@ export const blogService = {
 
     const cacheKey = `blog-posts-${params.toString()}`;
     
-    // Check cache first (only for GET requests without page filters for now)
-    if (!filters?.page || filters.page === 1) {
+    // Only use cache if not forcing refresh and it's page 1
+    if (!filters?.forceRefresh && (!filters?.page || filters.page === 1)) {
       const cached = getCached(cacheKey);
       if (cached) return cached;
     }
+
+    // Add cache-busting timestamp to ensure fresh data
+    params.append('_t', Date.now().toString());
 
     const response = await fetch(`${API_BASE_URL}/blog?${params.toString()}`);
     if (!response.ok) {
@@ -124,8 +128,8 @@ export const blogService = {
     }
     const data = await response.json();
     
-    // Cache the response
-    if (!filters?.page || filters.page === 1) {
+    // Only cache if not forcing refresh and it's page 1
+    if (!filters?.forceRefresh && (!filters?.page || filters.page === 1)) {
       setCached(cacheKey, data);
     }
     

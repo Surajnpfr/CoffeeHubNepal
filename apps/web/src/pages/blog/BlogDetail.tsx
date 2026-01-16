@@ -141,6 +141,8 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
   };
 
   const isAuthor = post && user && getAuthorId(post) === (user.mongoId || user.id.toString());
+  const isAdmin = user && (user.role === 'admin' || user.role === 'moderator');
+  const canDelete = isAuthor || isAdmin;
 
   if (loading) {
     return (
@@ -180,7 +182,7 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
           <h2 className="text-lg font-black text-[#6F4E37]">Blog Post</h2>
         </div>
         <div className="flex gap-2">
-          {!isAuthor && user && (
+          {!isAuthor && user && !isAdmin && (
             <Button
               variant="outline"
               className="text-xs"
@@ -190,25 +192,25 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
             </Button>
           )}
           {isAuthor && (
-            <>
-              <Button
-                variant="outline"
-                className="text-xs"
-                onClick={() => {
-                  sessionStorage.setItem('blogEditId', post._id);
-                  navigate('edit-blog', 0);
-                }}
-              >
-                <Edit size={14} /> Edit
-              </Button>
-              <Button
-                variant="outline"
-                className="text-xs text-red-600 hover:bg-red-50"
-                onClick={handleDelete}
-              >
-                <Trash2 size={14} /> Delete
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              className="text-xs"
+              onClick={() => {
+                sessionStorage.setItem('blogEditId', post._id);
+                navigate('edit-blog', 0);
+              }}
+            >
+              <Edit size={14} /> Edit
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="outline"
+              className="text-xs text-red-600 hover:bg-red-50"
+              onClick={handleDelete}
+            >
+              <Trash2 size={14} /> {isAdmin && !isAuthor ? 'Remove' : 'Delete'}
+            </Button>
           )}
         </div>
       </div>

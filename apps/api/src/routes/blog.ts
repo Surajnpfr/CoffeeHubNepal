@@ -161,10 +161,11 @@ router.put('/:id', validateObjectId(), authenticate, validate(updatePostSchema),
   }
 });
 
-// Delete post (auth + author check)
+// Delete post (auth + author check, or admin)
 router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
   try {
-    await deletePost(req.params.id, req.userId!);
+    const isAdmin = req.userRole === 'admin' || req.userRole === 'moderator';
+    await deletePost(req.params.id, req.userId!, isAdmin);
     return res.json({ message: 'Post deleted successfully' });
   } catch (error: any) {
     if (error.message === 'POST_NOT_FOUND') {

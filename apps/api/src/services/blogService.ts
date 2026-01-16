@@ -179,14 +179,15 @@ export const updatePost = async (
   return await post.save();
 };
 
-export const deletePost = async (id: string, authorId: string): Promise<boolean> => {
+export const deletePost = async (id: string, userId: string, isAdmin: boolean = false): Promise<boolean> => {
   const post = await BlogPost.findById(id);
   
   if (!post) {
     throw new Error('POST_NOT_FOUND');
   }
   
-  if (post.author.toString() !== authorId) {
+  // Allow deletion if user is the author OR if user is admin
+  if (!isAdmin && post.author.toString() !== userId) {
     throw new Error('UNAUTHORIZED');
   }
   

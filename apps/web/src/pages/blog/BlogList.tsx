@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { BlogCard } from '@/components/cards/BlogCard';
 import { blogService, BlogPost } from '@/services/blog.service';
@@ -22,15 +23,26 @@ export const BlogList = () => {
     loadPosts();
   }, [selectedCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Refresh posts when window gains focus (user returns to tab)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Force refresh when user returns to the page
+      loadPostsWithPage(pagination.page, true);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [pagination.page]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const loadPosts = async () => {
-    await loadPostsWithPage(1);
+    await loadPostsWithPage(1, false);
   };
 
-  const loadPostsWithPage = async (page: number) => {
+  const loadPostsWithPage = async (page: number, forceRefresh: boolean = false) => {
     setLoading(true);
     setError(null);
     try {
-      const filters: any = { page, limit: 20 };
+      const filters: any = { page, limit: 20, forceRefresh };
       if (selectedCategory !== 'All') {
         filters.category = selectedCategory;
       }
@@ -75,17 +87,28 @@ export const BlogList = () => {
     <div className="p-6 lg:p-8 space-y-6 animate-in fade-in pb-32 lg:pb-8">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-black">Blog & Stories</h2>
-        {user && (
-          <Button 
-            variant="primary" 
-            className="text-xs" 
-            onClick={() => {
-              setSubPage('create-blog');
-            }}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="text-xs"
+            onClick={() => loadPostsWithPage(pagination.page, true)}
+            disabled={loading}
           >
-            + Create Post
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Loading...' : 'Refresh'}
           </Button>
-        )}
+          {user && (
+            <Button 
+              variant="primary" 
+              className="text-xs" 
+              onClick={() => {
+                setSubPage('create-blog');
+              }}
+            >
+              + Create Post
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -134,7 +157,7 @@ export const BlogList = () => {
             onClick={() => {
               const newPage = pagination.page - 1;
               setPagination({ ...pagination, page: newPage });
-              loadPostsWithPage(newPage);
+              loadPostsWithPage(newPage, false);
             }}
             disabled={pagination.page === 1}
             className="text-xs"
@@ -149,7 +172,7 @@ export const BlogList = () => {
             onClick={() => {
               const newPage = pagination.page + 1;
               setPagination({ ...pagination, page: newPage });
-              loadPostsWithPage(newPage);
+              loadPostsWithPage(newPage, false);
             }}
             disabled={pagination.page === pagination.pages}
             className="text-xs"
