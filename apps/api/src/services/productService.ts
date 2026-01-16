@@ -196,6 +196,37 @@ export const deleteProduct = async (id: string, userId: string): Promise<boolean
   return true;
 };
 
+export const adminRemoveProduct = async (id: string, adminUserId: string, reason: string): Promise<boolean> => {
+  const product = await Product.findById(id).lean();
+  
+  if (!product) {
+    throw new Error('PRODUCT_NOT_FOUND');
+  }
+
+  // Verify admin/mod role
+  const { User } = await import('../models/User.js');
+  const admin = await User.findById(adminUserId).select('role').lean();
+  
+  if (!admin || (admin.role !== 'admin' && admin.role !== 'moderator')) {
+    throw new Error('UNAUTHORIZED');
+  }
+
+  // Deactivate the product
+  await Product.findByIdAndUpdate(id, { active: false });
+
+  // Create notification for the seller
+  const { createNotification } = await import('./notificationService.js');
+  await createNotification({
+    userId: product.sellerId.toString(),
+    subject: 'Listing Removed',
+    message: `Your listing "${product.title}" has been removed by an administrator. Reason: ${reason}`,
+    notificationType: 'listing_removed',
+    relatedId: id
+  });
+
+  return true;
+};
+
 export const markProductAsSold = async (id: string, userId: string): Promise<any> => {
   const product = await Product.findById(id).lean();
   

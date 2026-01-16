@@ -135,6 +135,21 @@ export const marketplaceService = {
     return true;
   },
 
+  async adminRemoveListing(id: string, reason: string): Promise<boolean> {
+    const response = await fetch(`${API_BASE_URL}/products/${id}/admin-remove`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ reason })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to remove listing');
+    }
+
+    return true;
+  },
+
   async markAsSold(id: string): Promise<Listing> {
     const response = await fetch(`${API_BASE_URL}/products/${id}/sold`, {
       method: 'POST',

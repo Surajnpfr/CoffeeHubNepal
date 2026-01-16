@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, ShieldCheck, AlertTriangle, UserCheck, ArrowLeft, DollarSign, MessageCircle, ShieldAlert } from 'lucide-react';
+import { Users, ShieldCheck, AlertTriangle, UserCheck, ArrowLeft, DollarSign, MessageCircle, ShieldAlert, Store } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { adminService } from '@/services/admin.service';
@@ -170,6 +170,17 @@ export const Dashboard = () => {
         >
           <ShieldAlert size={32} className="text-[#6F4E37]" />
           <span className="font-black text-sm">Post Alert</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          className="p-6 flex flex-col items-center gap-2 hover:bg-[#F8F5F2] transition-colors" 
+          onClick={() => {
+            setCurrentPage('admin');
+            setSubPage('marketplace');
+          }}
+        >
+          <Store size={32} className="text-[#6F4E37]" />
+          <span className="font-black text-sm">Manage Marketplace</span>
         </Button>
       </div>
 

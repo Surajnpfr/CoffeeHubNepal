@@ -441,7 +441,7 @@ export const CreateEvent = ({ onBack, onSubmit }: CreateEventProps) => {
         </Card>
       </div>
 
-      {loading && <LoadingOverlay />}
+      <LoadingOverlay isVisible={loading} />
     </div>
   );
 };

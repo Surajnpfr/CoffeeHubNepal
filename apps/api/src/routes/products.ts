@@ -9,7 +9,8 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
-  markProductAsSold
+  markProductAsSold,
+  adminRemoveProduct
 } from '../services/productService.js';
 
 const router = Router();
@@ -183,6 +184,27 @@ router.post('/:id/sold', validateObjectId(), authenticate, async (req: AuthReque
     }
     console.error('Mark product as sold error:', error);
     return res.status(500).json({ error: 'FAILED_TO_MARK_SOLD' });
+  }
+});
+
+// Admin/Mod remove product (auth + admin/mod check)
+const adminRemoveProductSchema = z.object({
+  reason: z.string().min(1).max(500)
+});
+
+router.post('/:id/admin-remove', validateObjectId(), authenticate, validate(adminRemoveProductSchema), async (req: AuthRequest, res) => {
+  try {
+    await adminRemoveProduct(req.params.id, req.userId!, req.body.reason);
+    return res.json({ message: 'Product removed successfully and notification sent to seller' });
+  } catch (error: any) {
+    if (error.message === 'PRODUCT_NOT_FOUND') {
+      return res.status(404).json({ error: 'PRODUCT_NOT_FOUND' });
+    }
+    if (error.message === 'UNAUTHORIZED') {
+      return res.status(403).json({ error: 'UNAUTHORIZED', message: 'Only admins and moderators can remove listings' });
+    }
+    console.error('Admin remove product error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_REMOVE_PRODUCT' });
   }
 });
 

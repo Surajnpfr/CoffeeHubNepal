@@ -43,6 +43,7 @@ const Reports = lazy(() => import('./pages/admin/Reports').then(m => ({ default:
 const Users = lazy(() => import('./pages/admin/Users').then(m => ({ default: m.Users })));
 const Prices = lazy(() => import('./pages/admin/Prices').then(m => ({ default: m.Prices })));
 const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ default: m.Contacts })));
+const AdminMarketplace = lazy(() => import('./pages/admin/Marketplace').then(m => ({ default: m.Marketplace })));
 const MyListings = lazy(() => import('./pages/profile/MyListings').then(m => ({ default: m.MyListings })));
 const MyJobs = lazy(() => import('./pages/jobs/MyJobs').then(m => ({ default: m.MyJobs })));
 const Certifications = lazy(() => import('./pages/profile/Certifications').then(m => ({ default: m.Certifications })));
@@ -249,6 +250,7 @@ const AppContent = () => {
         {subPage === 'users' && <Users />}
         {subPage === 'prices' && <Prices />}
         {subPage === 'contacts' && <Contacts />}
+        {subPage === 'marketplace' && <AdminMarketplace />}
         {!subPage && <Dashboard />}
       </Suspense>
     );

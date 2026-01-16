@@ -12,6 +12,11 @@ import {
   deleteContact,
   getContactStats
 } from '../services/contactService.js';
+import {
+  getUserNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead
+} from '../services/notificationService.js';
 
 const router = Router();
 
@@ -143,6 +148,41 @@ router.delete('/:id', authenticate, requireAdminOrModerator, validateObjectId(),
       return res.status(404).json({ error: 'CONTACT_NOT_FOUND', message: 'Contact not found' });
     }
     return res.status(500).json({ error: 'FAILED_TO_DELETE_CONTACT', message: err });
+  }
+});
+
+// Notification routes (authenticated users)
+router.get('/notifications', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const unreadOnly = req.query.unreadOnly === 'true';
+    const notifications = await getUserNotifications(req.userId!, unreadOnly);
+    return res.json({ notifications });
+  } catch (error: any) {
+    console.error('Get notifications error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_FETCH_NOTIFICATIONS' });
+  }
+});
+
+router.put('/notifications/:id/read', authenticate, validateObjectId(), async (req: AuthRequest, res) => {
+  try {
+    await markNotificationAsRead(req.params.id, req.userId!);
+    return res.json({ message: 'Notification marked as read' });
+  } catch (error: any) {
+    if (error.message === 'NOTIFICATION_NOT_FOUND') {
+      return res.status(404).json({ error: 'NOTIFICATION_NOT_FOUND' });
+    }
+    console.error('Mark notification as read error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_MARK_READ' });
+  }
+});
+
+router.put('/notifications/read-all', authenticate, async (req: AuthRequest, res) => {
+  try {
+    await markAllNotificationsAsRead(req.userId!);
+    return res.json({ message: 'All notifications marked as read' });
+  } catch (error: any) {
+    console.error('Mark all notifications as read error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_MARK_ALL_READ' });
   }
 });
 
