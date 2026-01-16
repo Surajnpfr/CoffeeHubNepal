@@ -48,7 +48,6 @@ const Certifications = lazy(() => import('./pages/profile/Certifications').then(
 const Settings = lazy(() => import('./pages/profile/Settings').then(m => ({ default: m.Settings })));
 const AboutUs = lazy(() => import('./pages/about/AboutUs').then(m => ({ default: m.AboutUs })));
 const ContactUs = lazy(() => import('./pages/contact/ContactUs').then(m => ({ default: m.ContactUs })));
-const FAQ = lazy(() => import('./pages/faq/FAQ').then(m => ({ default: m.FAQ })));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import('./pages/legal/TermsOfService').then(m => ({ default: m.TermsOfService })));
 
