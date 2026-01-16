@@ -311,7 +311,7 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
 
         <Card className="p-6 lg:p-8">
           <CommentSection
-            comments={post.comments}
+            comments={post.comments || []}
             onAddComment={handleAddComment}
             onDeleteComment={handleDeleteComment}
           />

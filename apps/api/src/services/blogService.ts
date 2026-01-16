@@ -108,8 +108,19 @@ export const getPosts = async (filters?: {
     BlogPost.countDocuments(query)
   ]);
 
+  // Ensure comments is always an array for each post and properly serialize comment IDs
+  const postsWithComments = posts.map((post: any) => ({
+    ...post,
+    comments: (post.comments || []).map((comment: any) => ({
+      ...comment,
+      _id: comment._id?.toString() || comment._id,
+      author: comment.author?.toString() || comment.author,
+      createdAt: comment.createdAt ? new Date(comment.createdAt).toISOString() : new Date().toISOString()
+    }))
+  }));
+
   return {
-    posts,
+    posts: postsWithComments,
     pagination: {
       page,
       limit,
@@ -129,6 +140,11 @@ export const getPostById = async (id: string): Promise<any> => {
   
   if (!post) {
     return null;
+  }
+
+  // Ensure comments is always an array
+  if (!post.comments) {
+    post.comments = [];
   }
 
   // Populate comment authors with role and avatar
@@ -151,8 +167,11 @@ export const getPostById = async (id: string): Promise<any> => {
       const authorData = authorMap.get(comment.author?.toString() || '');
       return {
         ...comment,
+        _id: comment._id?.toString() || comment._id, // Ensure _id is a string
+        author: comment.author?.toString() || comment.author, // Ensure author is a string
         authorRole: comment.authorRole || authorData?.role,
-        authorAvatar: comment.authorAvatar || authorData?.avatar
+        authorAvatar: comment.authorAvatar || authorData?.avatar,
+        createdAt: comment.createdAt ? new Date(comment.createdAt).toISOString() : new Date().toISOString()
       };
     });
   }

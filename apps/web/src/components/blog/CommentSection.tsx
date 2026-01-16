@@ -23,6 +23,9 @@ export const CommentSection = ({
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Ensure comments is always an array
+  const safeComments = Array.isArray(comments) ? comments : [];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmitting) return;
@@ -46,7 +49,7 @@ export const CommentSection = ({
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <MessageSquare className="text-[#6F4E37]" size={20} />
-        <h3 className="font-black text-lg">Comments ({comments.length})</h3>
+        <h3 className="font-black text-lg">Comments ({safeComments.length})</h3>
       </div>
 
       {user ? (
@@ -75,13 +78,13 @@ export const CommentSection = ({
       )}
 
       <div className="space-y-4">
-        {comments.length === 0 ? (
+        {safeComments.length === 0 ? (
           <Card className="p-6 text-center text-gray-400">
             <MessageSquare size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">No comments yet. Be the first to comment!</p>
           </Card>
         ) : (
-          comments.map((comment) => {
+          safeComments.map((comment) => {
             // Generate avatar URL if not provided
             const avatarSeed = comment.authorEmail || comment.authorName || 'user';
             const generatedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;

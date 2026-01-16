@@ -116,10 +116,10 @@ export const BlogList = () => {
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-5 py-2 rounded-full border border-[#EBE3D5] bg-white text-[10px] font-black whitespace-nowrap transition-colors ${
+            className={`px-5 py-2 rounded-full border text-[10px] font-black whitespace-nowrap transition-colors ${
               selectedCategory === cat
                 ? 'bg-[#6F4E37] text-white border-[#6F4E37]'
-                : 'hover:bg-[#EBE3D5]'
+                : 'bg-white text-[#2D241E] border-[#EBE3D5] hover:bg-[#EBE3D5]'
             }`}
           >
             {cat}
