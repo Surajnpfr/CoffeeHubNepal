@@ -3,35 +3,25 @@ import { Card } from '@/components/common/Card';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
-import logoImage from '@/assets/images/logo/coffeelogo.png';
-import surajNepalImage from '@/assets/images/team/SurajNepal.png';
-import SarthakBhattaraiImage from '@/assets/images/team/SarthakBhattarai.png';
-import SiddhantGiriImage from '@/assets/images/team/SiddhantGiri.jpeg';
-import KrrishNyopaneImage from '@/assets/images/team/KrrishNyoupane.png';
-import SachinJhaImage from '@/assets/images/team/SachinJha.png';
-import MukeshPandeyImage from '@/assets/images/team/MukeshPandey.png';
-import NawnitPoudelImage from '@/assets/images/team/NawnitPaudel.png';
-import SupriyaKhadkaImage from '@/assets/images/team/SupriyaKhadka.png';
-import RajdipJoshiImage from '@/assets/images/team/RajdipJoshi.png';
-import AasthaGaireImage from '@/assets/images/team/AasthaGaire.png';
-import PradipKhanalImage from '@/assets/images/team/PradipKhanal.png';
-import AdityaManShresthaImage from '@/assets/images/team/AdityaManShrestha.png';
+import logoImage from '@/assets/images/team/coffeelogo.webp';
+import surajNepalImage from '@/assets/images/team/SurajNepal.webp';
+import SarthakBhattaraiImage from '@/assets/images/team/SarthakBhattarai.webp';
+import KrrishNyopaneImage from '@/assets/images/team/KrrishNyoupane.webp';
+import SachinJhaImage from '@/assets/images/team/SachinJha.webp';
+import MukeshPandeyImage from '@/assets/images/team/MukeshPandey.webp';
+import NawnitPoudelImage from '@/assets/images/team/NawnitPaudel.webp';
+import SupriyaKhadkaImage from '@/assets/images/team/SupriyaKhadka.webp';
+import PradipKhanalImage from '@/assets/images/team/PradipKhanal.webp';
 
 const TEAM_MEMBERS = [
   { name: "Suraj Nepal", role: "Backend Developer", image: surajNepalImage },
   { name: "Sarthak Bhattarai", role: "Social Media Manager", image: SarthakBhattaraiImage },
-  { name: "Siddhant Giri", role: "Frontend Developer", image: SiddhantGiriImage },
   { name: "Krrish Nyopane", role: "UI/UX Designer", image: KrrishNyopaneImage },
   { name: "Sachin Jha", role: "Graphic Designer", image: SachinJhaImage },
   { name: "Mukesh Pandey", role: "Graphic Designer", image: MukeshPandeyImage },
   { name: "Nawnit Paudel", role: "Security Expert", image: NawnitPoudelImage },
   { name: "Supriya Khadka", role: "App Developer", image: SupriyaKhadkaImage },
-  { name: "Rajdip Joshi", role: "App Developer", image: RajdipJoshiImage },
-  { name: "Aastha Gaire", role: "Frontend Developer", image: AasthaGaireImage },
-  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage },
-  { name: "Aditya Man Shrestha", role: "Content Writer", image: AdityaManShresthaImage }
-
-  
+  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage }
 ];
 
 export const AboutUs = () => {

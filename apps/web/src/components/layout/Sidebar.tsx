@@ -3,7 +3,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
 import { Icon } from '@/components/common/Icon';
-import logoImage from '@/assets/images/logo/coffeelogo.png';
+import logoImage from '@/assets/images/team/coffeelogo.webp';
 import { t } from '@/i18n';
 
 interface SidebarProps {
