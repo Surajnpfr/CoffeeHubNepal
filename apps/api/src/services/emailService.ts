@@ -390,6 +390,19 @@ export const sendSignupVerificationLinkEmail = async (
   expiryMinutes: number
 ): Promise<void> => {
   console.log(`[Email Service] sendSignupVerificationLinkEmail called for: ${email}`);
+  console.log(`[Email Service] Verification link received: ${verificationLink}`);
+  
+  // Validate verification link
+  if (!verificationLink || !verificationLink.includes('token=')) {
+    console.error('[Email Service] ERROR: Invalid verification link - missing token parameter');
+    throw new Error('INVALID_VERIFICATION_LINK');
+  }
+  
+  if (!verificationLink.startsWith('http://') && !verificationLink.startsWith('https://')) {
+    console.error('[Email Service] ERROR: Invalid verification link - missing protocol');
+    console.error(`[Email Service] Link: ${verificationLink}`);
+    throw new Error('INVALID_VERIFICATION_LINK');
+  }
   
   // Try Azure Email SDK first
   if (isAzureEmail) {
@@ -458,11 +471,16 @@ If you didn't create an account, please ignore this email.
           }
         };
 
+        // Log the verification link being sent
+        console.log(`[Email Service] Sending verification link: ${verificationLink}`);
+        console.log(`[Email Service] Link length: ${verificationLink.length} characters`);
+        
         const poller = await azureClient.beginSend(emailMessage);
         const result = await poller.pollUntilDone();
         
         console.log(`[Email Service] Signup verification email sent successfully via Azure to ${email}`);
         console.log(`[Email Service] Message ID: ${result.id}`);
+        console.log(`[Email Service] Verification link included in email: ${verificationLink}`);
         return;
       } catch (error: any) {
         console.error('[Email Service] Failed to send signup verification email via Azure:', error.message);

@@ -85,6 +85,12 @@ export const requestSignupVerificationLink = async (
   }
   const verificationLink = `${baseUrl}/complete-signup?token=${plainToken}`;
 
+  // Log the verification link for debugging
+  console.log(`[Email Verification] Generated verification link for ${normalizedEmail}:`);
+  console.log(`[Email Verification] Base URL: ${baseUrl}`);
+  console.log(`[Email Verification] Full Link: ${verificationLink}`);
+  console.log(`[Email Verification] Token (first 10 chars): ${plainToken.substring(0, 10)}...`);
+
   // Send verification email
   try {
     await sendSignupVerificationLinkEmail(normalizedEmail, verificationLink, TOKEN_EXPIRY_MINUTES);
