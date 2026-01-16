@@ -242,8 +242,10 @@ const reportPostSchema = z.object({
 
 router.post('/:id/report', validateObjectId(), authenticate, validate(reportPostSchema), async (req: AuthRequest, res) => {
   try {
-    const post = await getPostById(req.params.id);
-    if (!post) {
+    // Fetch post without populate to get raw author ObjectId
+    const { BlogPost } = await import('../models/BlogPost.js');
+    const post = await BlogPost.findById(req.params.id).select('author').lean();
+    if (!post || !post.author) {
       return res.status(404).json({ error: 'POST_NOT_FOUND' });
     }
 
@@ -254,10 +256,13 @@ router.post('/:id/report', validateObjectId(), authenticate, validate(reportPost
       return res.status(401).json({ error: 'USER_NOT_FOUND' });
     }
 
+    // Extract author ID - post.author should be an ObjectId when using .lean() without populate
+    const reportedUserId = post.author.toString();
+
     const report = await createReport({
       postId: req.params.id,
       reporterId: user._id.toString(),
-      reportedUserId: post.author.toString(),
+      reportedUserId: reportedUserId,
       reason: req.body.reason,
       type: req.body.type
     });
@@ -270,11 +275,15 @@ router.post('/:id/report', validateObjectId(), authenticate, validate(reportPost
     if (error.message === 'POST_NOT_FOUND') {
       return res.status(404).json({ error: 'POST_NOT_FOUND' });
     }
+    if (error.message === 'USER_NOT_FOUND') {
+      return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+    }
     if (error.message === 'ALREADY_REPORTED') {
       return res.status(409).json({ error: 'ALREADY_REPORTED', message: 'You have already reported this post' });
     }
     console.error('Report post error:', error);
-    return res.status(500).json({ error: 'FAILED_TO_REPORT_POST' });
+    console.error('Error stack:', error.stack);
+    return res.status(500).json({ error: 'FAILED_TO_REPORT_POST', message: error.message || 'Unknown error occurred' });
   }
 });
 
