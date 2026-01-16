@@ -74,26 +74,26 @@ Our diverse team of developers, designers, and content creators:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    User Interface                        │
-│  (React Components - Pages, Layouts, Common)           │
+│                    User Interface                       │
+│  (React Components - Pages, Layouts, Common)            │
+└────────────────────┬────────────────────────────────────┘
+                     │
+┌────────────────────▼──────────────────────────────────┐
+│              Context Layer                            │
+│  • AppContext (Navigation, Language, UI State)        │
+│  • AuthContext (Authentication, User Data)            │
 └────────────────────┬──────────────────────────────────┘
                      │
 ┌────────────────────▼──────────────────────────────────┐
-│              Context Layer                              │
-│  • AppContext (Navigation, Language, UI State)          │
-│  • AuthContext (Authentication, User Data)              │
-└────────────────────┬──────────────────────────────────┘
-                     │
-┌────────────────────▼──────────────────────────────────┐
-│              Service Layer                              │
-│  • auth.service.ts      • blog.service.ts              │
-│  • admin.service.ts     • job.service.ts               │
+│              Service Layer                            │
+│  • auth.service.ts      • blog.service.ts             │
+│  • admin.service.ts     • job.service.ts              │
 │  • marketplace.service  • notice.service.ts           │
-│  • price.service.ts     • contact.service.ts           │
+│  • price.service.ts     • contact.service.ts          │
 └────────────────────┬──────────────────────────────────┘
                      │
-┌────────────────────▼──────────────────────────────────┐
-│              API Layer (REST)                           │
+┌────────────────────▼───────────────────────────────────┐
+│              API Layer (REST)                          │
 │  Backend API: http://localhost:4000                    │
 │  • /auth/*      • /blog/*                              │
 │  • /admin/*     • /jobs/*                              │
