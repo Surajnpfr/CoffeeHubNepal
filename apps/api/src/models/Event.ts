@@ -107,4 +107,5 @@ eventSchema.index({ createdAt: -1 });
 eventSchema.index({ location: 1, type: 1 });
 eventSchema.index({ active: 1, date: 1 });
 
-export const Event = mongoose.model<EventDocument>('Event', eventSchema);
+// Use 'applications' collection as specified
+export const Event = mongoose.model<EventDocument>('Event', eventSchema, 'applications');

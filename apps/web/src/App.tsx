@@ -30,6 +30,7 @@ const CreateJob = lazy(() => import('./pages/jobs/CreateJob').then(m => ({ defau
 const PriceBoard = lazy(() => import('./pages/prices/PriceBoard').then(m => ({ default: m.PriceBoard })));
 const Events = lazy(() => import('./pages/events/Events').then(m => ({ default: m.Events })));
 const EventDetail = lazy(() => import('./pages/events/EventDetail').then(m => ({ default: m.EventDetail })));
+const CreateEvent = lazy(() => import('./pages/events/CreateEvent').then(m => ({ default: m.CreateEvent })));
 const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.Register })));
 const FarmerVerification = lazy(() => import('./pages/auth/FarmerVerification').then(m => ({ default: m.FarmerVerification })));
@@ -140,6 +141,10 @@ const AppContent = () => {
       case 'job-detail':
       case 'create-job':
         setCurrentPage('jobs');
+        break;
+      case 'event-detail':
+      case 'create-event':
+        setCurrentPage('events');
         break;
       case 'my-listings':
       case 'my-jobs':
@@ -293,6 +298,7 @@ const AppContent = () => {
         const eventId = sessionStorage.getItem('eventDetailId') || (selectedId ? selectedId.toString() : '');
         if (eventId) return <EventDetail eventId={eventId} onBack={handleBack} />;
       }
+      if (subPage === 'create-event') return <CreateEvent onBack={handleBack} />;
       if (subPage === 'my-listings') return <MyListings />;
       if (subPage === 'my-jobs') return <MyJobs />;
       if (subPage === 'certifications') return <Certifications />;

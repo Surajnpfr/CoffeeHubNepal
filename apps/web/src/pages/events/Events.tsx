@@ -16,6 +16,15 @@ export const Events = () => {
     loadEvents();
   }, []);
 
+  // Reload events when returning from create page
+  useEffect(() => {
+    const handleFocus = () => {
+      loadEvents();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const loadEvents = async () => {
     setLoading(true);
     setError(null);
@@ -46,7 +55,11 @@ export const Events = () => {
           <h2 className="text-3xl font-black">Events</h2>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Upcoming Events</p>
         </div>
-        <Button variant="primary" className="text-xs">
+        <Button 
+          variant="primary" 
+          className="text-xs"
+          onClick={() => navigate('create-event')}
+        >
           + Create Event
         </Button>
       </div>
