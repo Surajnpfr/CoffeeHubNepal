@@ -15,13 +15,13 @@ import PradipKhanalImage from '@/assets/images/team/PradipKhanal.webp';
 
 const TEAM_MEMBERS = [
   { name: "Suraj Nepal", role: "Backend Developer", image: surajNepalImage },
+  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage },
   { name: "Sarthak Bhattarai", role: "Social Media Manager", image: SarthakBhattaraiImage },
   { name: "Krrish Nyopane", role: "UI/UX Designer", image: KrrishNyopaneImage },
   { name: "Sachin Jha", role: "Graphic Designer", image: SachinJhaImage },
   { name: "Mukesh Pandey", role: "Graphic Designer", image: MukeshPandeyImage },
   { name: "Nawnit Paudel", role: "Security Expert", image: NawnitPoudelImage },
-  { name: "Supriya Khadka", role: "App Developer", image: SupriyaKhadkaImage },
-  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage }
+  { name: "Supriya Khadka", role: "App Developer", image: SupriyaKhadkaImage }
 ];
 
 export const AboutUs = () => {
