@@ -23,6 +23,8 @@ export interface CommentData {
   content: string;
   authorName: string;
   authorEmail: string;
+  authorRole?: string;
+  authorAvatar?: string;
 }
 
 export const createPost = async (authorId: string, data: CreatePostData): Promise<BlogPostDocument> => {
@@ -120,10 +122,42 @@ export const getPosts = async (filters?: {
 export const getPostById = async (id: string): Promise<any> => {
   // Use .lean() for read operations - much faster, returns plain JS object
   // Populate author to get current user data (name, avatar)
-  return await BlogPost.findById(id)
+  const post = await BlogPost.findById(id)
     .select('title content author authorName authorEmail category tags images likes comments published createdAt updatedAt')
-    .populate('author', 'name avatar')
+    .populate('author', 'name avatar role')
     .lean();
+  
+  if (!post) {
+    return null;
+  }
+
+  // Populate comment authors with role and avatar
+  const { User } = await import('../models/User.js');
+  const commentAuthorIds = post.comments
+    .map((c: any) => c.author)
+    .filter(Boolean);
+  
+  if (commentAuthorIds.length > 0) {
+    const commentAuthors = await User.find({ _id: { $in: commentAuthorIds } })
+      .select('_id role avatar')
+      .lean();
+    
+    const authorMap = new Map(
+      commentAuthors.map((u: any) => [u._id.toString(), { role: u.role, avatar: u.avatar }])
+    );
+    
+    // Update comments with role and avatar if not already set
+    post.comments = post.comments.map((comment: any) => {
+      const authorData = authorMap.get(comment.author?.toString() || '');
+      return {
+        ...comment,
+        authorRole: comment.authorRole || authorData?.role,
+        authorAvatar: comment.authorAvatar || authorData?.avatar
+      };
+    });
+  }
+  
+  return post;
 };
 
 export const updatePost = async (
@@ -196,11 +230,17 @@ export const addComment = async (
   if (!post) {
     throw new Error('POST_NOT_FOUND');
   }
+
+  // Fetch user data to get role and avatar
+  const { User } = await import('../models/User.js');
+  const user = await User.findById(userId).select('role avatar').lean();
   
   post.comments.push({
     author: new mongoose.Types.ObjectId(userId),
     authorName: data.authorName,
     authorEmail: data.authorEmail,
+    authorRole: user?.role || data.authorRole,
+    authorAvatar: user?.avatar || data.authorAvatar,
     content: data.content,
     createdAt: new Date()
   });

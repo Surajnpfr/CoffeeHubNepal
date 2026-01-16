@@ -54,6 +54,8 @@ export interface Comment {
   author: string;
   authorName: string;
   authorEmail: string;
+  authorRole?: string;
+  authorAvatar?: string;
   content: string;
   createdAt: string;
 }

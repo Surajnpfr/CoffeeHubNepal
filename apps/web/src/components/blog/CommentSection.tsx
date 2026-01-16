@@ -81,33 +81,85 @@ export const CommentSection = ({
             <p className="text-sm">No comments yet. Be the first to comment!</p>
           </Card>
         ) : (
-          comments.map((comment) => (
-            <Card key={comment._id} className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-[#6F4E37] rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {comment.authorName.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div>
-                      <p className="text-sm font-black text-gray-700">{comment.authorName}</p>
-                      <p className="text-[10px] text-gray-400">{formatDate(comment.createdAt)}</p>
-                    </div>
-                    {canDelete(comment) && onDeleteComment && (
-                      <button
-                        onClick={() => onDeleteComment(comment._id)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
-                        title="Delete comment"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+          comments.map((comment) => {
+            // Generate avatar URL if not provided
+            const avatarSeed = comment.authorEmail || comment.authorName || 'user';
+            const generatedAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(avatarSeed)}`;
+            const avatarUrl = comment.authorAvatar || generatedAvatarUrl;
+            
+            // Role labels
+            const roleLabels: { [key: string]: string } = {
+              farmer: 'Farmer',
+              roaster: 'Roaster',
+              trader: 'Trader',
+              exporter: 'Exporter',
+              expert: 'Expert',
+              admin: 'Admin',
+              moderator: 'Moderator'
+            };
+            const roleLabel = comment.authorRole ? roleLabels[comment.authorRole] || comment.authorRole : 'Member';
+            
+            return (
+              <Card key={comment._id} className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-[#6F4E37]/20">
+                    {comment.authorAvatar ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt={comment.authorName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<div class="w-full h-full bg-[#6F4E37] flex items-center justify-center text-white font-bold text-sm">${comment.authorName.charAt(0).toUpperCase()}</div>`;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <img 
+                        src={generatedAvatarUrl} 
+                        alt={comment.authorName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<div class="w-full h-full bg-[#6F4E37] flex items-center justify-center text-white font-bold text-sm">${comment.authorName.charAt(0).toUpperCase()}</div>`;
+                          }
+                        }}
+                      />
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-black text-gray-700">{comment.authorName}</p>
+                          {comment.authorRole && (
+                            <span className="px-2 py-0.5 bg-[#6F4E37]/10 text-[#6F4E37] rounded-full text-[10px] font-semibold">
+                              {roleLabel}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-400">{formatDate(comment.createdAt)}</p>
+                      </div>
+                      {canDelete(comment) && onDeleteComment && (
+                        <button
+                          onClick={() => onDeleteComment(comment._id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          title="Delete comment"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

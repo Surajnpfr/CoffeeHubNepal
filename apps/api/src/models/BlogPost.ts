@@ -4,6 +4,8 @@ export interface CommentDocument {
   author: mongoose.Types.ObjectId;
   authorName: string;
   authorEmail: string;
+  authorRole?: string; // User role (farmer, roaster, trader, etc.)
+  authorAvatar?: string; // User profile picture/avatar
   content: string;
   createdAt: Date;
 }
@@ -29,6 +31,8 @@ const commentSchema = new Schema<CommentDocument>(
     author: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     authorName: { type: String, required: true },
     authorEmail: { type: String, required: true },
+    authorRole: { type: String, trim: true },
+    authorAvatar: { type: String, trim: true },
     content: { type: String, required: true, trim: true },
     createdAt: { type: Date, default: Date.now }
   },

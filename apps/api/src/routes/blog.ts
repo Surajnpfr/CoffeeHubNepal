@@ -195,10 +195,16 @@ router.post('/:id/like', validateObjectId(), authenticate, async (req: AuthReque
 // Add comment (auth required)
 router.post('/:id/comments', validateObjectId(), authenticate, validate(commentSchema), async (req: AuthRequest, res) => {
   try {
+    // Get user data for role and avatar
+    const { User } = await import('../models/User.js');
+    const user = await User.findById(req.userId).select('name role avatar').lean();
+    
     const post = await addComment(req.params.id, req.userId!, {
       content: req.body.content,
-      authorName: req.body.authorName || 'User',
-      authorEmail: req.userEmail!
+      authorName: req.body.authorName || user?.name || 'User',
+      authorEmail: req.userEmail!,
+      authorRole: user?.role,
+      authorAvatar: user?.avatar
     });
     
     return res.status(201).json(post);
