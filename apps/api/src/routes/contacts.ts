@@ -158,7 +158,7 @@ router.get('/notifications', authenticate, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: 'UNAUTHORIZED' });
     }
     
-    const unreadOnly = req.query.unreadOnly === 'true' || req.query.unreadOnly === true;
+    const unreadOnly = req.query.unreadOnly === 'true';
     const notifications = await getUserNotifications(req.userId, unreadOnly);
     return res.json({ notifications });
   } catch (error: any) {
