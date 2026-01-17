@@ -11,6 +11,7 @@ import {
   deleteJob,
   createApplication,
   getApplications,
+  getMyApplications,
   updateApplicationStatus
 } from '../services/jobService.js';
 
@@ -154,6 +155,21 @@ router.post('/:id/apply', validateObjectId(), authenticate, requireVerified, val
     }
     console.error('Apply to job error:', error);
     return res.status(500).json({ error: 'FAILED_TO_APPLY' });
+  }
+});
+
+// Get my applications (auth - for applicants to view their own applications)
+// Must be defined before /:id/applications to avoid route conflicts
+router.get('/applications/my', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const applications = await getMyApplications(req.userId!);
+    return res.json(applications);
+  } catch (error: any) {
+    if (error.message === 'Invalid applicant ID') {
+      return res.status(400).json({ error: 'INVALID_USER_ID' });
+    }
+    console.error('Get my applications error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_FETCH_APPLICATIONS' });
   }
 });
 

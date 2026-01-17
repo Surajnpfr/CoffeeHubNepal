@@ -168,6 +168,34 @@ export const getApplications = async (jobId: string, userId: string): Promise<an
     .lean();
 };
 
+export const getMyApplications = async (applicantId: string): Promise<any[]> => {
+  if (!mongoose.Types.ObjectId.isValid(applicantId)) {
+    throw new Error('Invalid applicant ID');
+  }
+
+  const applications = await Application.find({ 
+    applicantId: new mongoose.Types.ObjectId(applicantId) 
+  })
+    .select('jobId applicantName applicantEmail applicantPhone message status appliedAt createdAt reviewedAt')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Populate job details for each application
+  const applicationsWithJobs = await Promise.all(
+    applications.map(async (app) => {
+      const job = await Job.findById(app.jobId)
+        .select('title farm location pay type active')
+        .lean();
+      return {
+        ...app,
+        job: job || null
+      };
+    })
+  );
+
+  return applicationsWithJobs;
+};
+
 export const updateApplicationStatus = async (
   applicationId: string,
   jobId: string,
@@ -178,6 +206,12 @@ export const updateApplicationStatus = async (
   const job = await Job.findById(jobId).lean();
   if (!job || job.createdBy.toString() !== userId) {
     throw new Error('UNAUTHORIZED');
+  }
+
+  // Get the application before updating to check if status is changing
+  const existingApplication = await Application.findById(applicationId).lean();
+  if (!existingApplication) {
+    throw new Error('APPLICATION_NOT_FOUND');
   }
 
   const application = await Application.findByIdAndUpdate(
@@ -192,6 +226,26 @@ export const updateApplicationStatus = async (
 
   if (!application) {
     throw new Error('APPLICATION_NOT_FOUND');
+  }
+
+  // Create notification for applicant if status changed to accepted or rejected
+  if (status === 'accepted' || status === 'rejected') {
+    const { createNotification } = await import('./notificationService.js');
+    const statusText = status === 'accepted' ? 'accepted' : 'rejected';
+    const statusEmoji = status === 'accepted' ? '✅' : '❌';
+    
+    try {
+      await createNotification({
+        userId: application.applicantId.toString(),
+        subject: `Job Application ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}`,
+        message: `${statusEmoji} Your application for "${job.title}" at ${job.farm} has been ${statusText}.`,
+        notificationType: 'other',
+        relatedId: jobId // Store jobId so user can navigate to the job
+      });
+    } catch (notificationError) {
+      // Log error but don't fail the status update
+      console.error('Failed to create notification for application status update:', notificationError);
+    }
   }
 
   return application;
