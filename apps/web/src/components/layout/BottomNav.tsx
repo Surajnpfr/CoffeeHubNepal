@@ -1,7 +1,7 @@
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Calendar } from 'lucide-react';
+import { Calendar, Plus } from 'lucide-react';
 import { t } from '@/i18n';
 import { Icon } from '@/components/common/Icon';
 
@@ -46,9 +46,10 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
                 {/* + Button above Market tab */}
                 <button 
                   onClick={onMenuOpen}
-                  className="absolute -top-10 w-14 h-14 bg-coffee-dark text-white rounded-md border-2 border-coffee-dark active:scale-95 transition-all z-10 flex items-center justify-center"
+                  className="absolute -top-10 w-14 h-14 bg-coffee-dark text-white rounded-md border-2 border-coffee-dark active:scale-95 transition-all z-10 flex items-center justify-center shadow-lg"
+                  aria-label="Create new content"
                 >
-                  <Icon name="BottomNav_Plus_32" size={32} />
+                  <Plus size={28} strokeWidth={3} className="text-white" />
                 </button>
                 {/* Market tab */}
                 <button 
