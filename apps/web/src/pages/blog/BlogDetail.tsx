@@ -9,6 +9,7 @@ import { ReportModal } from '@/components/blog/ReportModal';
 import { blogService, BlogPost, getAuthorName, getAuthorAvatar, getAuthorId } from '@/services/blog.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 import { formatDate } from '@/utils/formatDate';
 
 interface BlogDetailProps {
@@ -19,6 +20,7 @@ interface BlogDetailProps {
 export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
   const { navigate, setCurrentPage } = useApp();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isVisitor } = useVerification();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -301,10 +303,13 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
               isLiked={isLiked}
               likesCount={likesCount}
               onLike={handleLike}
-              disabled={authLoading}
+              disabled={authLoading || isVisitor}
             />
             {!isAuthenticated && !authLoading && (
               <span className="text-xs text-gray-500">Log in to like</span>
+            )}
+            {isVisitor && isAuthenticated && (
+              <span className="text-xs text-yellow-600">Verification required to like</span>
             )}
           </div>
         </Card>

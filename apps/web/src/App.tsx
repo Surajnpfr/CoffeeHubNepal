@@ -7,6 +7,7 @@ import { DesktopHeader } from './components/layout/DesktopHeader';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import { CreateMenu } from './components/common/CreateMenu';
+import { VerificationBanner } from './components/common/VerificationBanner';
 import { useMediaQuery } from './hooks/useMediaQuery';
 
 // Constants moved outside component for stable identity and performance
@@ -348,6 +349,7 @@ const AppContent = () => {
           <Sidebar onMenuOpen={() => setIsMenuOpen(true)} />
           <div className="flex-1 flex flex-col min-w-0">
             <DesktopHeader />
+            <VerificationBanner />
             <main className="flex-1 overflow-y-auto">
               <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl xl:max-w-7xl 2xl:max-w-[1440px] mx-auto">
                 {renderSubPage()}
@@ -370,6 +372,7 @@ const AppContent = () => {
         
         <div className="flex-1 flex flex-col min-w-0">
           <DesktopHeader />
+          <VerificationBanner />
           
           <main className="flex-1 overflow-y-auto">
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl xl:max-w-7xl 2xl:max-w-[1440px] mx-auto">
@@ -421,6 +424,7 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-[#F8F5F2] font-body text-[#2D241E] max-w-2xl mx-auto shadow-2xl relative">
       <Header />
+      <VerificationBanner />
       
       <main className="min-h-screen">
         <div className="px-4 py-4 space-y-4">

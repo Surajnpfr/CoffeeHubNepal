@@ -6,6 +6,7 @@ import { Card } from '../common/Card';
 import { Comment } from '@/services/blog.service';
 import { formatDate } from '@/utils/formatDate';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 
 interface CommentSectionProps {
   comments: Comment[];
@@ -20,6 +21,7 @@ export const CommentSection = ({
   onDeleteComment
 }: CommentSectionProps) => {
   const { user } = useAuth();
+  const { isVisitor } = useVerification();
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,24 +55,30 @@ export const CommentSection = ({
       </div>
 
       {user ? (
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <Input
-            placeholder="Write a comment..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            disabled={isSubmitting}
-            maxLength={1000}
-          />
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full"
-            disabled={!commentText.trim() || isSubmitting}
-          >
-            <Send size={16} />
-            {isSubmitting ? 'Posting...' : 'Post Comment'}
-          </Button>
-        </form>
+        isVisitor ? (
+          <Card className="p-4 text-center text-sm text-yellow-800 bg-yellow-50 border border-yellow-200">
+            Account verification required. Please wait for admin approval to comment.
+          </Card>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <Input
+              placeholder="Write a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              disabled={isSubmitting}
+              maxLength={1000}
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              disabled={!commentText.trim() || isSubmitting}
+            >
+              <Send size={16} />
+              {isSubmitting ? 'Posting...' : 'Post Comment'}
+            </Button>
+          </form>
+        )
       ) : (
         <Card className="p-4 text-center text-sm text-gray-500">
           Please log in to comment

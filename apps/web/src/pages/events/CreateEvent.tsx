@@ -8,6 +8,7 @@ import { LoadingOverlay } from '@/components/common/LoadingOverlay';
 import { eventService } from '@/services/event.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 import { compressImage } from '@/utils/imageCompression';
 
 interface CreateEventProps {
@@ -20,6 +21,7 @@ const EVENT_TYPES = ['Festival', 'Workshop', 'Training', 'Conference', 'Other'];
 export const CreateEvent = ({ onBack, onSubmit }: CreateEventProps) => {
   const { navigate } = useApp();
   const { user, isAuthenticated } = useAuth();
+  const { isVisitor } = useVerification();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,6 +47,31 @@ export const CreateEvent = ({ onBack, onSubmit }: CreateEventProps) => {
   if (!isAuthenticated || !user) {
     navigate('login');
     return null;
+  }
+
+  // Check if user is verified
+  if (isVisitor) {
+    return (
+      <div className="min-h-screen bg-[#F8F5F2] pb-32 lg:pb-8">
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 lg:px-8 py-4 flex items-center gap-4">
+          <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl">
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="text-lg font-black text-[#6F4E37]">Create Event</h2>
+        </div>
+        <div className="p-6 lg:p-8 lg:max-w-3xl lg:mx-auto">
+          <Card className="p-6 lg:p-8 text-center">
+            <p className="text-lg font-bold mb-2 text-yellow-800">Account Verification Required</p>
+            <p className="text-gray-600 mb-4">
+              Your account is pending verification. Please wait for admin approval to create events.
+            </p>
+            <Button variant="primary" onClick={onBack}>
+              Go Back
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   // Set organizer to user's name by default

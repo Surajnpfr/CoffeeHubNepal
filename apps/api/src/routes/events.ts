@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { authenticate, requireVerified, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { validateObjectId } from '../middleware/validateObjectId.js';
 import { logger } from '../utils/logger.js';
@@ -84,8 +84,8 @@ router.post('/', authenticate, validate(createEventSchema), async (req: AuthRequ
   }
 });
 
-// Update event (auth + owner check)
-router.put('/:id', validateObjectId(), authenticate, validate(updateEventSchema), async (req: AuthRequest, res) => {
+// Update event (auth + verification + owner check)
+router.put('/:id', validateObjectId(), authenticate, requireVerified, validate(updateEventSchema), async (req: AuthRequest, res) => {
   try {
     const event = await updateEvent(req.params.id, req.userId!, req.body);
     
@@ -123,8 +123,8 @@ router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest,
   }
 });
 
-// Register for event (auth required)
-router.post('/:id/register', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
+// Register for event (auth + verification required)
+router.post('/:id/register', validateObjectId(), authenticate, requireVerified, async (req: AuthRequest, res) => {
   try {
     const event = await registerForEvent(req.params.id, req.userId!);
     return res.json({ message: 'Successfully registered for event', event });

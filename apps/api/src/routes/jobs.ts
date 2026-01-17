@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { authenticate, requireVerified, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
@@ -87,8 +87,8 @@ router.post('/', authenticate, validate(createJobSchema), async (req: AuthReques
   }
 });
 
-// Update job (auth + owner check)
-router.put('/:id', validateObjectId(), authenticate, validate(createJobSchema.partial()), async (req: AuthRequest, res) => {
+// Update job (auth + verification + owner check)
+router.put('/:id', validateObjectId(), authenticate, requireVerified, validate(createJobSchema.partial()), async (req: AuthRequest, res) => {
   try {
     const job = await updateJob(req.params.id, req.userId!, req.body);
     
@@ -126,8 +126,8 @@ router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest,
   }
 });
 
-// Apply to job (auth required)
-router.post('/:id/apply', validateObjectId(), authenticate, validate(createApplicationSchema), async (req: AuthRequest, res) => {
+// Apply to job (auth + verification required)
+router.post('/:id/apply', validateObjectId(), authenticate, requireVerified, validate(createApplicationSchema), async (req: AuthRequest, res) => {
   try {
     const { User } = await import('../models/User.js');
     const user = await User.findById(req.userId).lean();

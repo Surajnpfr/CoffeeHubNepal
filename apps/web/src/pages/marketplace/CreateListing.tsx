@@ -7,6 +7,7 @@ import { Textarea } from '@/components/common/Textarea';
 import { compressImage } from '@/utils/imageCompression';
 import { marketplaceService } from '@/services/marketplace.service';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 
 interface CreateListingProps {
   onBack: () => void;
@@ -14,7 +15,8 @@ interface CreateListingProps {
 }
 
 export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { isVisitor } = useVerification();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -127,8 +129,13 @@ export const CreateListing = ({ onBack, onSubmit }: CreateListingProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user) {
       setError('Please log in to create a listing');
+      return;
+    }
+
+    if (isVisitor) {
+      setError('Account verification required. Please wait for admin approval to create listings.');
       return;
     }
 

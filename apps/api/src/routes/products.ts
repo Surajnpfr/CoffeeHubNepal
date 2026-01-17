@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { authenticate, requireVerified, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { validateObjectId } from '../middleware/validateObjectId.js';
 import {
@@ -66,8 +66,8 @@ router.get('/:id', validateObjectId(), async (req, res) => {
   }
 });
 
-// Create product (auth required)
-router.post('/', authenticate, validate(createProductSchema), async (req: AuthRequest, res) => {
+// Create product (auth + verification required)
+router.post('/', authenticate, requireVerified, validate(createProductSchema), async (req: AuthRequest, res) => {
   try {
     console.log('[Products] Creating product for user:', req.userId);
     console.log('[Products] Product data:', JSON.stringify(req.body, null, 2));
@@ -131,8 +131,8 @@ router.post('/', authenticate, validate(createProductSchema), async (req: AuthRe
   }
 });
 
-// Update product (auth + owner check)
-router.put('/:id', validateObjectId(), authenticate, validate(createProductSchema.partial()), async (req: AuthRequest, res) => {
+// Update product (auth + verification + owner check)
+router.put('/:id', validateObjectId(), authenticate, requireVerified, validate(createProductSchema.partial()), async (req: AuthRequest, res) => {
   try {
     const product = await updateProduct(req.params.id, req.userId!, req.body);
     

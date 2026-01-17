@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Image as ImageIcon, X, Upload, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
@@ -8,6 +8,7 @@ import { LoadingOverlay } from '@/components/common/LoadingOverlay';
 import { blogService } from '@/services/blog.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 import { compressImage } from '@/utils/imageCompression';
 
 const CATEGORIES = ['Agronomy', 'Processing', 'Marketing', 'Stories', 'Tips', 'News'];
@@ -15,6 +16,7 @@ const CATEGORIES = ['Agronomy', 'Processing', 'Marketing', 'Stories', 'Tips', 'N
 export const CreateBlog = () => {
   const { setSubPage, navigate } = useApp();
   const { user, isAuthenticated } = useAuth();
+  const { isVisitor } = useVerification();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
@@ -44,6 +46,31 @@ export const CreateBlog = () => {
             <p className="text-lg font-bold mb-4">Please log in to create a blog post</p>
             <Button variant="primary" onClick={() => setSubPage('login')}>
               Log In
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is verified
+  if (isVisitor) {
+    return (
+      <div className="min-h-screen bg-[#F8F5F2] pb-32 lg:pb-8">
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-[#EBE3D5] px-6 lg:px-8 py-4 flex items-center gap-4">
+          <button onClick={() => setSubPage(null)} className="p-2 hover:bg-gray-100 rounded-xl">
+            <ArrowLeft size={20} />
+          </button>
+          <h2 className="text-lg font-black text-[#6F4E37]">Create Blog Post</h2>
+        </div>
+        <div className="p-6 lg:p-8 lg:max-w-3xl lg:mx-auto">
+          <Card className="p-6 lg:p-8 text-center">
+            <p className="text-lg font-bold mb-2 text-yellow-800">Account Verification Required</p>
+            <p className="text-gray-600 mb-4">
+              Your account is pending verification. Please wait for admin approval to create blog posts.
+            </p>
+            <Button variant="primary" onClick={() => setSubPage(null)}>
+              Go Back
             </Button>
           </Card>
         </div>

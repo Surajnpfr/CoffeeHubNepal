@@ -5,6 +5,7 @@ import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
 import { Textarea } from '@/components/common/Textarea';
 import { useAuth } from '@/context/AuthContext';
+import { useVerification } from '@/hooks/useVerification';
 import { jobService } from '@/services/job.service';
 import { useApp } from '@/context/AppContext';
 import { t } from '@/i18n';
@@ -36,6 +37,11 @@ export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
     e.preventDefault();
     if (!user?.id && !user?.mongoId) {
       setError('Please log in to post a job');
+      return;
+    }
+
+    if (isVisitor) {
+      setError('Account verification required. Please wait for admin approval to post jobs.');
       return;
     }
 

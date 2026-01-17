@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { authenticate, requireVerified, AuthRequest } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { validateObjectId } from '../middleware/validateObjectId.js';
 import { logger } from '../utils/logger.js';
@@ -72,8 +72,8 @@ router.get('/:id', validateObjectId(), async (req, res) => {
   }
 });
 
-// Create post (auth required)
-router.post('/', authenticate, validate(createPostSchema), async (req: AuthRequest, res) => {
+// Create post (auth + verification required)
+router.post('/', authenticate, requireVerified, validate(createPostSchema), async (req: AuthRequest, res) => {
   try {
     // Filter out empty image URLs
     const images = req.body.images?.filter((url: string) => url && url.trim()) || [];
@@ -139,8 +139,8 @@ router.post('/', authenticate, validate(createPostSchema), async (req: AuthReque
   }
 });
 
-// Update post (auth + author check)
-router.put('/:id', validateObjectId(), authenticate, validate(updatePostSchema), async (req: AuthRequest, res) => {
+// Update post (auth + verification + author check)
+router.put('/:id', validateObjectId(), authenticate, requireVerified, validate(updatePostSchema), async (req: AuthRequest, res) => {
   try {
     const post = await updatePost(req.params.id, req.userId!, req.body);
     
@@ -179,8 +179,8 @@ router.delete('/:id', validateObjectId(), authenticate, async (req: AuthRequest,
   }
 });
 
-// Like/Unlike post (auth required)
-router.post('/:id/like', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
+// Like/Unlike post (auth + verification required)
+router.post('/:id/like', validateObjectId(), authenticate, requireVerified, async (req: AuthRequest, res) => {
   try {
     const result = await likePost(req.params.id, req.userId!);
     return res.json(result);
@@ -193,8 +193,8 @@ router.post('/:id/like', validateObjectId(), authenticate, async (req: AuthReque
   }
 });
 
-// Add comment (auth required)
-router.post('/:id/comments', validateObjectId(), authenticate, validate(commentSchema), async (req: AuthRequest, res) => {
+// Add comment (auth + verification required)
+router.post('/:id/comments', validateObjectId(), authenticate, requireVerified, validate(commentSchema), async (req: AuthRequest, res) => {
   try {
     // Get user data for role and avatar
     const { User } = await import('../models/User.js');

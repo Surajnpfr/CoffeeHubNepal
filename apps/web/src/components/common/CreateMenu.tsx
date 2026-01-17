@@ -1,4 +1,5 @@
 import { Store, Bell, Briefcase, BookOpen } from 'lucide-react';
+import { useVerification } from '@/hooks/useVerification';
 
 interface CreateMenuProps {
   isOpen: boolean;
@@ -7,7 +8,19 @@ interface CreateMenuProps {
 }
 
 export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
+  const { isVisitor } = useVerification();
+
   if (!isOpen) return null;
+
+  const handleSelect = (action: string) => {
+    if (isVisitor) {
+      // Show message that verification is required
+      alert('Account verification required. Please wait for admin approval to create content.');
+      return;
+    }
+    onSelect(action);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center">
@@ -18,6 +31,11 @@ export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
       <div className="relative w-full max-w-2xl bg-white rounded-t-[48px] p-10 animate-in slide-in-from-bottom duration-300">
         <div className="w-12 h-1.5 bg-gray-100 rounded-full mx-auto mb-10"></div>
         <h3 className="text-2xl font-black text-center mb-8">Contribute to the Hub</h3>
+        {isVisitor && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800 text-center">
+            Account verification required to create content
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           {[
             { label: "Sell Harvest", icon: Store, color: "bg-green-50 text-green-600", action: "sell" },
@@ -27,11 +45,13 @@ export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
           ].map((opt, i) => (
             <button 
               key={i} 
-              onClick={() => {
-                onSelect(opt.action);
-                onClose();
-              }}
-              className="flex flex-col items-center gap-3 p-8 rounded-[32px] border border-gray-50 bg-[#FBF9F6] active:scale-95 transition-all"
+              onClick={() => handleSelect(opt.action)}
+              disabled={isVisitor}
+              className={`flex flex-col items-center gap-3 p-8 rounded-[32px] border border-gray-50 bg-[#FBF9F6] transition-all ${
+                isVisitor 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'active:scale-95 cursor-pointer hover:bg-gray-50'
+              }`}
             >
               <div className={`w-14 h-14 ${opt.color} rounded-2xl flex items-center justify-center shadow-sm`}>
                 <opt.icon size={24}/>
