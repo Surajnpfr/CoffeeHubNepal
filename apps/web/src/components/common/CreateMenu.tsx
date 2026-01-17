@@ -1,5 +1,6 @@
-import { Store, Bell, Briefcase, BookOpen } from 'lucide-react';
+import { Store, Bell, Briefcase, BookOpen, Calendar } from 'lucide-react';
 import { useVerification } from '@/hooks/useVerification';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreateMenuProps {
   isOpen: boolean;
@@ -9,6 +10,10 @@ interface CreateMenuProps {
 
 export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
   const { isVisitor } = useVerification();
+  const { user } = useAuth();
+  
+  // Check if user is admin or moderator
+  const isAdminOrModerator = user?.role === 'admin' || user?.role === 'moderator';
 
   if (!isOpen) return null;
 
@@ -40,8 +45,12 @@ export const CreateMenu = ({ isOpen, onClose, onSelect }: CreateMenuProps) => {
           {[
             { label: "Sell Harvest", icon: Store, color: "bg-green-50 text-green-600", action: "sell" },
             { label: "Write Blog", icon: BookOpen, color: "bg-purple-50 text-purple-600", action: "blog" },
-            { label: "Post Notice", icon: Bell, color: "bg-red-50 text-red-600", action: "notice" },
-            { label: "Post Job", icon: Briefcase, color: "bg-amber-50 text-amber-600", action: "job" }
+            { label: "Post Job", icon: Briefcase, color: "bg-amber-50 text-amber-600", action: "job" },
+            { label: "Create Event", icon: Calendar, color: "bg-blue-50 text-blue-600", action: "event" },
+            // Only show "Post Notice" for admin/moderator
+            ...(isAdminOrModerator ? [
+              { label: "Post Notice", icon: Bell, color: "bg-red-50 text-red-600", action: "notice" }
+            ] : [])
           ].map((opt, i) => (
             <button 
               key={i} 

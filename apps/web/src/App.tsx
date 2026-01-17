@@ -160,6 +160,9 @@ const AppContent = () => {
       case 'blog':
         navigate('create-blog');
         break;
+      case 'event':
+        navigate('create-event');
+        break;
     }
   };
 
