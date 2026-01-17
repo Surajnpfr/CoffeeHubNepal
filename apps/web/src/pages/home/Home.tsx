@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/common/Card';
-import { TrendingUp, Briefcase, DollarSign, ShieldAlert } from 'lucide-react';
+import { TrendingUp, Briefcase, DollarSign, ShieldAlert, ArrowRight } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { priceService, Price } from '@/services/price.service';
+import { jobService, Job } from '@/services/job.service';
+import { JobCard } from '@/components/cards/JobCard';
+import { Button } from '@/components/common/Button';
 import { t } from '@/i18n';
 
 interface HomeProps {
@@ -10,16 +13,19 @@ interface HomeProps {
 }
 
 export const Home = ({ onNavigate }: HomeProps) => {
-  const { language } = useApp();
+  const { language, navigate } = useApp();
   const [prices, setPrices] = useState<Price[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [pricesLoading, setPricesLoading] = useState(true);
+  const [jobsLoading, setJobsLoading] = useState(true);
 
   useEffect(() => {
     loadPrices();
+    loadJobs();
   }, []);
 
   const loadPrices = async () => {
-    setLoading(true);
+    setPricesLoading(true);
     try {
       const data = await priceService.getPrices();
       // Show only first 4-6 prices on homepage
@@ -28,8 +34,29 @@ export const Home = ({ onNavigate }: HomeProps) => {
       console.error('Failed to load prices:', error);
       setPrices([]);
     } finally {
-      setLoading(false);
+      setPricesLoading(false);
     }
+  };
+
+  const loadJobs = async () => {
+    setJobsLoading(true);
+    try {
+      const result = await jobService.getJobs({ limit: 6 });
+      // Show only first 6 jobs on homepage
+      setJobs(result.jobs.slice(0, 6));
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+      setJobs([]);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const handleJobClick = (id: string | number | undefined) => {
+    if (!id) return;
+    const jobId = typeof id === 'string' ? id : id.toString();
+    sessionStorage.setItem('jobDetailId', jobId);
+    navigate('job-detail', 0);
   };
   
   return (
@@ -43,7 +70,7 @@ export const Home = ({ onNavigate }: HomeProps) => {
           <TrendingUp className="text-[#3A7D44]" size={16}/>
         </div>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-        {loading ? (
+        {pricesLoading ? (
           <div className="text-center py-4 text-gray-500 text-sm">Loading prices...</div>
         ) : prices.length === 0 ? (
           <div className="text-center py-4 text-gray-500 text-sm">No prices available</div>
@@ -72,6 +99,37 @@ export const Home = ({ onNavigate }: HomeProps) => {
         )}
       </div>
     </section>
+
+      {/* Recent Jobs Section */}
+      <section>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-black text-xs sm:text-sm uppercase text-gray-400 tracking-widest">
+            {t(language, 'home.recentJobs') || 'Recent Jobs'}
+          </h3>
+          <Button
+            variant="outline"
+            className="text-xs px-3"
+            onClick={() => onNavigate('jobs')}
+          >
+            View All <ArrowRight size={12} className="ml-1" />
+          </Button>
+        </div>
+        {jobsLoading ? (
+          <div className="text-center py-8 text-gray-500 text-sm">Loading jobs...</div>
+        ) : jobs.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">No jobs available</div>
+        ) : (
+          <div className="space-y-4">
+            {jobs.map(job => (
+              <JobCard 
+                key={job._id || job.id} 
+                job={job} 
+                onApply={() => handleJobClick(job._id || job.id || '')} 
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* AI Assistant Card - Disabled */}
       {/* <Card className="bg-gradient-to-br from-[#6F4E37] to-[#4E3626] text-white p-6 border-none shadow-xl relative overflow-hidden">
