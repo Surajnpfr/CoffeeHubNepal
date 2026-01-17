@@ -9,6 +9,18 @@ import { BottomNav } from './components/layout/BottomNav';
 import { CreateMenu } from './components/common/CreateMenu';
 import { useMediaQuery } from './hooks/useMediaQuery';
 
+// Constants moved outside component for stable identity and performance
+const PROTECTED_PAGES = new Set(['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events']);
+const PUBLIC_PAGES = new Set(['about', 'contact', 'privacy', 'terms']);
+const PROTECTED_SUB_PAGES = new Set([
+  'blog-detail', 'create-blog', 'edit-blog',
+  'create-listing', 'listing-detail',
+  'notice-detail', 'create-notice',
+  'job-detail', 'create-job',
+  'event-detail',
+  'my-listings', 'my-jobs', 'certifications', 'settings'
+]);
+
 // Core pages - loaded immediately
 import { Home } from './pages/home/Home';
 import { LandingPage } from './pages/landing/LandingPage';
@@ -75,17 +87,40 @@ const AppContent = () => {
     }
   }, [user, setUserRole]);
 
-  // Redirect unauthenticated users from protected pages
+  // Redirect unauthenticated users from protected pages (Task A: moved to useEffect)
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const protectedPages = ['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
       // Redirect if trying to access protected page (home is handled separately - shows landing page)
-      if (protectedPages.includes(currentPage) && !subPage) {
+      if (PROTECTED_PAGES.has(currentPage) && !subPage) {
         setCurrentPage('home');
         setSubPage('login');
       }
     }
   }, [isAuthenticated, isLoading, currentPage, subPage, setCurrentPage, setSubPage]);
+
+  // Redirect unauthenticated users from protected sub-pages (Task A: moved to useEffect)
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && subPage && PROTECTED_SUB_PAGES.has(subPage)) {
+      setCurrentPage('home');
+      setSubPage('login');
+    }
+  }, [isAuthenticated, isLoading, subPage, setCurrentPage, setSubPage]);
+
+  // Redirect non-admin/moderator users from admin pages (Task A: moved to useEffect)
+  useEffect(() => {
+    if (currentPage === 'admin' && !isLoading) {
+      if (!isAuthenticated) {
+        setCurrentPage('home');
+        setSubPage('login');
+      } else {
+        const userRole = user?.role;
+        if (userRole !== 'admin' && userRole !== 'moderator') {
+          setCurrentPage('home');
+          setSubPage(null);
+        }
+      }
+    }
+  }, [currentPage, isAuthenticated, isLoading, user?.role, setCurrentPage, setSubPage]);
 
   // Handle URL-based navigation for reset password and complete signup (from email links)
   useEffect(() => {
@@ -174,8 +209,7 @@ const AppContent = () => {
   }
 
   // Public pages (accessible without login) - only: about, contact, privacy, terms
-  const publicPages = ['about', 'contact', 'privacy', 'terms'];
-  if (!isAuthenticated && subPage && publicPages.includes(subPage)) {
+  if (!isAuthenticated && subPage && PUBLIC_PAGES.has(subPage)) {
     return (
       <div className="min-h-screen bg-[#F8F5F2]">
         <Suspense fallback={<PageLoader />}>
@@ -193,18 +227,16 @@ const AppContent = () => {
     return <LandingPage />;
   }
 
-  // Redirect authenticated users from landing to home content
-  if (currentPage === 'home' && isAuthenticated && !subPage) {
-    // Will fall through to render Home component below
-  }
-
   // Protected pages - require authentication
   // useEffect above handles redirect, but show loading if somehow we're still on protected page
-  const protectedPages = ['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
-  if (!isAuthenticated && protectedPages.includes(currentPage) && !subPage) {
+  if (!isAuthenticated && PROTECTED_PAGES.has(currentPage) && !subPage) {
     // Show loading while redirect happens (useEffect will handle redirect)
     return <PageLoader />;
   }
+
+  // Admin pages - check if user should be redirected (useEffect handles redirect, this is just for rendering)
+  const isAdminOrModerator = user?.role === 'admin' || user?.role === 'moderator';
+  const shouldShowAdmin = currentPage === 'admin' && isAuthenticated && isAdminOrModerator;
 
   // Auth pages (always full screen) - wrapped in Suspense for lazy loading
   if (subPage === 'login') {
@@ -227,22 +259,8 @@ const AppContent = () => {
   }
 
   // Admin pages - only accessible to admins and moderators
-  if (currentPage === 'admin') {
-    // Check if user is authenticated and has admin/moderator role
-    if (!isAuthenticated) {
-      setCurrentPage('home');
-      setSubPage('login');
-      return null;
-    }
-    
-    const userRole = user?.role;
-    if (userRole !== 'admin' && userRole !== 'moderator') {
-      // Redirect non-admin/moderator users away from admin panel
-      setCurrentPage('home');
-      setSubPage(null);
-      return null;
-    }
-    
+  // Note: Redirects are handled in useEffect above, this just renders the admin UI
+  if (shouldShowAdmin) {
     return (
       <Suspense fallback={<PageLoader />}>
         {subPage === 'verifications' && <Verifications />}
@@ -257,59 +275,65 @@ const AppContent = () => {
   }
 
   // Render sub-page content - wrapped in Suspense for lazy loading
+  // Task A: Removed setState calls during render - redirects now handled in useEffect above
+  // Task C: Optimized sessionStorage access - only read when needed
   const renderSubPage = () => {
-    // Protected sub-pages that require authentication
-    const protectedSubPages = [
-      'blog-detail', 'create-blog', 'edit-blog',
-      'create-listing', 'listing-detail',
-      'notice-detail', 'create-notice',
-      'job-detail', 'create-job',
-      'event-detail',
-      'my-listings', 'my-jobs', 'certifications', 'settings'
-    ];
+    if (!subPage) return null;
 
-    // Check if trying to access protected sub-page without authentication
-    if (!isAuthenticated && subPage && protectedSubPages.includes(subPage)) {
-      setCurrentPage('home');
-      setSubPage('login');
-      return null;
-    }
+    // Cache sessionStorage reads per subPage
+    const getStoredId = (key: string) => sessionStorage.getItem(key) || (selectedId ? selectedId.toString() : '');
 
     const content = (() => {
-      if (subPage === 'blog-detail') {
-        const postId = sessionStorage.getItem('blogDetailId') || (selectedId ? selectedId.toString() : '');
-        if (postId) return <BlogDetail postId={postId} onBack={handleBack} />;
+      switch (subPage) {
+        case 'blog-detail': {
+          const postId = getStoredId('blogDetailId');
+          return postId ? <BlogDetail postId={postId} onBack={handleBack} /> : null;
+        }
+        case 'create-blog':
+          return <CreateBlog />;
+        case 'edit-blog': {
+          const postId = getStoredId('blogEditId');
+          return postId ? <EditBlog postId={postId} onBack={handleBack} /> : null;
+        }
+        case 'create-listing':
+          return <CreateListing onBack={handleBack} />;
+        case 'notice-detail': {
+          const noticeId = getStoredId('noticeDetailId');
+          return noticeId ? <NoticeDetail noticeId={noticeId} onBack={handleBack} /> : null;
+        }
+        case 'create-notice':
+          return <CreateNotice onBack={handleBack} />;
+        case 'job-detail': {
+          const jobId = getStoredId('jobDetailId');
+          return jobId ? <JobDetail jobId={jobId} onBack={handleBack} /> : null;
+        }
+        case 'create-job':
+          return <CreateJob onBack={handleBack} />;
+        case 'event-detail': {
+          const eventId = getStoredId('eventDetailId');
+          return eventId ? <EventDetail eventId={eventId} onBack={handleBack} /> : null;
+        }
+        case 'create-event':
+          return <CreateEvent onBack={handleBack} />;
+        case 'my-listings':
+          return <MyListings />;
+        case 'my-jobs':
+          return <MyJobs />;
+        case 'certifications':
+          return <Certifications />;
+        case 'settings':
+          return <Settings />;
+        case 'about':
+          return <AboutUs />;
+        case 'contact':
+          return <ContactUs />;
+        case 'privacy':
+          return <PrivacyPolicy />;
+        case 'terms':
+          return <TermsOfService />;
+        default:
+          return null;
       }
-      if (subPage === 'create-blog') return <CreateBlog />;
-      if (subPage === 'edit-blog') {
-        const postId = sessionStorage.getItem('blogEditId') || (selectedId ? selectedId.toString() : '');
-        if (postId) return <EditBlog postId={postId} onBack={handleBack} />;
-      }
-      if (subPage === 'create-listing') return <CreateListing onBack={handleBack} />;
-      if (subPage === 'notice-detail') {
-        const noticeId = sessionStorage.getItem('noticeDetailId') || (selectedId ? selectedId.toString() : '');
-        if (noticeId) return <NoticeDetail noticeId={noticeId} onBack={handleBack} />;
-      }
-      if (subPage === 'create-notice') return <CreateNotice onBack={handleBack} />;
-      if (subPage === 'job-detail') {
-        const jobId = sessionStorage.getItem('jobDetailId') || (selectedId ? selectedId.toString() : '');
-        if (jobId) return <JobDetail jobId={jobId} onBack={handleBack} />;
-      }
-      if (subPage === 'create-job') return <CreateJob onBack={handleBack} />;
-      if (subPage === 'event-detail') {
-        const eventId = sessionStorage.getItem('eventDetailId') || (selectedId ? selectedId.toString() : '');
-        if (eventId) return <EventDetail eventId={eventId} onBack={handleBack} />;
-      }
-      if (subPage === 'create-event') return <CreateEvent onBack={handleBack} />;
-      if (subPage === 'my-listings') return <MyListings />;
-      if (subPage === 'my-jobs') return <MyJobs />;
-      if (subPage === 'certifications') return <Certifications />;
-      if (subPage === 'settings') return <Settings />;
-      if (subPage === 'about') return <AboutUs />;
-      if (subPage === 'contact') return <ContactUs />;
-      if (subPage === 'privacy') return <PrivacyPolicy />;
-      if (subPage === 'terms') return <TermsOfService />;
-      return null;
     })();
     
     return content ? <Suspense fallback={<PageLoader />}>{content}</Suspense> : null;
