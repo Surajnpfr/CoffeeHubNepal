@@ -107,6 +107,8 @@ export const en = {
     noJobsYet: 'No jobs posted yet',
     createFirstJob: 'Create Your First Job',
     applicationCount: 'Applications',
+    closeJob: 'Close Job',
+    closeJobConfirm: 'Are you sure you want to close this job? The job will no longer accept new applications, but existing applications will remain visible.',
     deleteJob: 'Delete Job',
     deleteJobConfirm: 'Are you sure you want to delete this job? This action cannot be undone.',
     viewJob: 'View Job',

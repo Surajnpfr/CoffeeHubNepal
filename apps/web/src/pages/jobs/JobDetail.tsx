@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X, Trash2, XCircle } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -34,6 +34,8 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
   const [applyError, setApplyError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [closeConfirm, setCloseConfirm] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     loadJob();
@@ -157,6 +159,22 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
     }
   };
 
+  const handleCloseJob = async () => {
+    if (!jobId) return;
+    setClosing(true);
+    try {
+      await jobService.closeJob(jobId);
+      // Reload job to reflect closed status
+      await loadJob();
+      setCloseConfirm(false);
+    } catch (error: any) {
+      console.error('Failed to close job:', error);
+      alert(error.message || 'Failed to close job. Please try again.');
+    } finally {
+      setClosing(false);
+    }
+  };
+
   const handleDeleteJob = async () => {
     if (!jobId) return;
     setDeleting(true);
@@ -199,15 +217,25 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
           <ArrowLeft size={20} />
         </button>
         <h2 className="text-lg font-black text-[#6F4E37] flex-1">{t(language, 'jobs.jobDetails')}</h2>
-        {isJobCreator && (
-          <Button
-            variant="outline"
-            className="text-red-600 border-red-600 hover:bg-red-50 px-3"
-            onClick={() => setDeleteConfirm(true)}
-            disabled={deleting}
-          >
-            <Trash2 size={16} />
-          </Button>
+        {isJobCreator && job.active !== false && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="text-orange-600 border-orange-600 hover:bg-orange-50 px-3"
+              onClick={() => setCloseConfirm(true)}
+              disabled={closing}
+            >
+              <XCircle size={16} />
+            </Button>
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-600 hover:bg-red-50 px-3"
+              onClick={() => setDeleteConfirm(true)}
+              disabled={deleting}
+            >
+              <Trash2 size={16} />
+            </Button>
+          </div>
         )}
       </div>
 
@@ -427,6 +455,37 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
           </>
         )}
       </div>
+
+      {closeConfirm && (
+        <Modal
+          onClose={() => setCloseConfirm(false)}
+        >
+        <div className="p-6 space-y-4">
+          <h3 className="text-xl font-black text-[#6F4E37] mb-4">{t(language, 'jobs.closeJob') || 'Close Job'}</h3>
+          <p className="text-gray-700">
+            {t(language, 'jobs.closeJobConfirm') || 'Are you sure you want to close this job? The job will no longer accept new applications, but existing applications will remain visible.'}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setCloseConfirm(false)}
+              disabled={closing}
+            >
+              {t(language, 'common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              onClick={handleCloseJob}
+              disabled={closing}
+            >
+              {closing ? t(language, 'common.loading') || 'Closing...' : t(language, 'jobs.closeJob') || 'Close Job'}
+            </Button>
+          </div>
+        </div>
+        </Modal>
+      )}
 
       {deleteConfirm && (
         <Modal

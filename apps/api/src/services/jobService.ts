@@ -128,6 +128,21 @@ export const deleteJob = async (id: string, userId: string): Promise<boolean> =>
   return true;
 };
 
+export const closeJob = async (id: string, userId: string): Promise<boolean> => {
+  const job = await Job.findById(id).lean();
+  
+  if (!job) {
+    throw new Error('JOB_NOT_FOUND');
+  }
+
+  if (job.createdBy.toString() !== userId) {
+    throw new Error('UNAUTHORIZED');
+  }
+
+  await Job.findByIdAndUpdate(id, { active: false });
+  return true;
+};
+
 export const createApplication = async (jobId: string, userId: string, data: CreateApplicationData): Promise<ApplicationDocument> => {
   // Check if job exists
   const job = await Job.findById(jobId);

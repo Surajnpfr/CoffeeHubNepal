@@ -177,6 +177,18 @@ export const jobService = {
     return { ...application, id: application._id };
   },
 
+  async closeJob(jobId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/close`, {
+      method: 'PUT',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to close job');
+    }
+  },
+
   async deleteJob(jobId: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
       method: 'DELETE',

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Plus, Eye, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Trash2, XCircle } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -23,6 +23,8 @@ export const MyJobs = () => {
   const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [closeConfirm, setCloseConfirm] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
 
   useEffect(() => {
     loadMyJobs();
@@ -65,6 +67,23 @@ export const MyJobs = () => {
   const handleJobClick = (jobId: string) => {
     sessionStorage.setItem('jobDetailId', jobId);
     navigate('job-detail', 0);
+  };
+
+  const handleCloseJob = async (jobId: string) => {
+    setClosing(true);
+    try {
+      await jobService.closeJob(jobId);
+      // Update job in local state to reflect closed status
+      setMyJobs(prev => prev.map(job => 
+        (job._id || job.id) === jobId ? { ...job, active: false } : job
+      ));
+      setCloseConfirm(null);
+    } catch (error: any) {
+      console.error('Failed to close job:', error);
+      alert(error.message || 'Failed to close job. Please try again.');
+    } finally {
+      setClosing(false);
+    }
   };
 
   const handleDeleteJob = async (jobId: string) => {
@@ -153,6 +172,16 @@ export const MyJobs = () => {
                     >
                       <Eye size={14} /> {t(language, 'jobs.viewApplications')}
                     </Button>
+                    {job.active !== false && (
+                      <Button 
+                        variant="outline" 
+                        className="text-xs py-2 px-3 text-orange-600 border-orange-600 hover:bg-orange-50" 
+                        onClick={() => setCloseConfirm(jobId)}
+                        disabled={closing}
+                      >
+                        <XCircle size={14} />
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       className="text-xs py-2 px-3 text-red-600 border-red-600 hover:bg-red-50" 
@@ -169,6 +198,37 @@ export const MyJobs = () => {
           })
         )}
       </div>
+
+      {closeConfirm !== null && (
+        <Modal
+          onClose={() => setCloseConfirm(null)}
+        >
+        <div className="p-6 space-y-4">
+          <h3 className="text-xl font-black text-[#6F4E37] mb-4">{t(language, 'jobs.closeJob') || 'Close Job'}</h3>
+          <p className="text-gray-700">
+            {t(language, 'jobs.closeJobConfirm') || 'Are you sure you want to close this job? The job will no longer accept new applications, but existing applications will remain visible.'}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setCloseConfirm(null)}
+              disabled={closing}
+            >
+              {t(language, 'common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              onClick={() => closeConfirm && handleCloseJob(closeConfirm)}
+              disabled={closing}
+            >
+              {closing ? t(language, 'common.loading') || 'Closing...' : t(language, 'jobs.closeJob') || 'Close Job'}
+            </Button>
+          </div>
+        </div>
+        </Modal>
+      )}
 
       {deleteConfirm !== null && (
         <Modal

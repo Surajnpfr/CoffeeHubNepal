@@ -9,6 +9,7 @@ import {
   getJobById,
   updateJob,
   deleteJob,
+  closeJob,
   createApplication,
   getApplications,
   getMyApplications,
@@ -108,6 +109,23 @@ router.put('/:id', validateObjectId(), authenticate, requireVerified, validate(c
     }
     console.error('Update job error:', error);
     return res.status(500).json({ error: 'FAILED_TO_UPDATE_JOB' });
+  }
+});
+
+// Close job (auth + owner check)
+router.put('/:id/close', validateObjectId(), authenticate, async (req: AuthRequest, res) => {
+  try {
+    await closeJob(req.params.id, req.userId!);
+    return res.json({ message: 'Job closed successfully' });
+  } catch (error: any) {
+    if (error.message === 'JOB_NOT_FOUND') {
+      return res.status(404).json({ error: 'JOB_NOT_FOUND' });
+    }
+    if (error.message === 'UNAUTHORIZED') {
+      return res.status(403).json({ error: 'UNAUTHORIZED', message: 'You can only close your own jobs' });
+    }
+    console.error('Close job error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_CLOSE_JOB' });
   }
 });
 
