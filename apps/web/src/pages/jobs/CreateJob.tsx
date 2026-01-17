@@ -17,6 +17,7 @@ interface CreateJobProps {
 
 export const CreateJob = ({ onBack, onSubmit }: CreateJobProps) => {
   const { user } = useAuth();
+  const { isVisitor } = useVerification();
   const { language } = useApp();
   const [formData, setFormData] = useState({
     title: '',

@@ -1,6 +1,5 @@
 import { useVerification } from '@/hooks/useVerification';
 import { AlertCircle } from 'lucide-react';
-import { Card } from './Card';
 
 export const VerificationBanner = () => {
   const { isVisitor, verificationMessage } = useVerification();

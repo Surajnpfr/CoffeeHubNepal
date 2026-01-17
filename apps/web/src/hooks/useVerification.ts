@@ -8,7 +8,7 @@ export const useVerification = () => {
   const { user, isAuthenticated } = useAuth();
 
   const isVerified = user?.verified === true;
-  const isVisitor = isAuthenticated && user && !user.verified;
+  const isVisitor = Boolean(isAuthenticated && user && !user.verified);
 
   const verificationMessage = isVisitor
     ? 'Account verification required. Please wait for admin approval to post or interact.'
