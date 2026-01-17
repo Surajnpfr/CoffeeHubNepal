@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
-  const { currentPage, setCurrentPage, setSubPage, language } = useApp();
+  const { currentPage, setCurrentPage, setSubPage, setSelectedId, language } = useApp();
   const { isAuthenticated } = useAuth();
 
   const mainTabs: Array<{
@@ -34,8 +34,12 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
     if (!isAuthenticated && protectedPages.includes(page)) {
       setCurrentPage('home');
       setSubPage('login');
+      setSelectedId(null);
     } else {
+      // Clear sub-page and selected ID when navigating to a main page
       setCurrentPage(page);
+      setSubPage(null);
+      setSelectedId(null);
     }
   };
 
@@ -75,6 +79,7 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
             onClick={() => {
               setCurrentPage('home');
               setSubPage('login');
+              setSelectedId(null);
             }}
           >
             Sign In
