@@ -41,12 +41,18 @@ export const getJobs = async (filters?: {
   page?: number;
   limit?: number;
   createdBy?: string;
+  includeInactive?: boolean;
 }) => {
   const page = filters?.page || 1;
   const limit = Math.min(filters?.limit || 20, 50);
   const skip = (page - 1) * limit;
 
-  const query: any = { active: true };
+  const query: any = {};
+  
+  // Only filter by active if not including inactive jobs (for job creators viewing their own jobs)
+  if (!filters?.includeInactive) {
+    query.active = true;
+  }
 
   if (filters?.type) {
     query.type = filters.type;

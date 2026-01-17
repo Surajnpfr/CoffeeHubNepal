@@ -46,7 +46,8 @@ router.get('/', async (req, res) => {
       location: req.query.location as string | undefined,
       page: req.query.page ? parseInt(req.query.page as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
-      createdBy: req.query.createdBy as string | undefined
+      createdBy: req.query.createdBy as string | undefined,
+      includeInactive: req.query.includeInactive === 'true'
     };
 
     const result = await getJobs(filters);

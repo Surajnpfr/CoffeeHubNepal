@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Plus, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, Trash2, X } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Job, jobService } from '@/services/job.service';
 import { t } from '@/i18n';
+import { Modal } from '@/components/common/Modal';
 
 export const MyJobs = () => {
   const { setSubPage, setCurrentPage, navigate, language } = useApp();
@@ -20,6 +21,8 @@ export const MyJobs = () => {
   const [myJobs, setMyJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [applicationCounts, setApplicationCounts] = useState<Record<string, number>>({});
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadMyJobs();
@@ -62,6 +65,21 @@ export const MyJobs = () => {
   const handleJobClick = (jobId: string) => {
     sessionStorage.setItem('jobDetailId', jobId);
     navigate('job-detail', 0);
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    setDeleting(true);
+    try {
+      await jobService.deleteJob(jobId);
+      // Remove job from local state
+      setMyJobs(prev => prev.filter(job => (job._id || job.id) !== jobId));
+      setDeleteConfirm(null);
+    } catch (error: any) {
+      console.error('Failed to delete job:', error);
+      alert(error.message || 'Failed to delete job. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -120,14 +138,30 @@ export const MyJobs = () => {
                     <span>{job.location}</span>
                     <span>•</span>
                     <span className="text-[#6F4E37] font-black">{job.pay}</span>
+                    {job.active === false && (
+                      <>
+                        <span>•</span>
+                        <Badge variant="alert" className="text-xs">Closed</Badge>
+                      </>
+                    )}
                   </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-xs py-2" 
-                    onClick={() => handleJobClick(jobId)}
-                  >
-                    <Eye size={14} /> {t(language, 'jobs.viewApplications')}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-xs py-2" 
+                      onClick={() => handleJobClick(jobId)}
+                    >
+                      <Eye size={14} /> {t(language, 'jobs.viewApplications')}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="text-xs py-2 px-3 text-red-600 border-red-600 hover:bg-red-50" 
+                      onClick={() => setDeleteConfirm(jobId)}
+                      disabled={deleting}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -135,6 +169,37 @@ export const MyJobs = () => {
           })
         )}
       </div>
+
+      {deleteConfirm !== null && (
+        <Modal
+          onClose={() => setDeleteConfirm(null)}
+        >
+        <div className="p-6 space-y-4">
+          <h3 className="text-xl font-black text-[#6F4E37] mb-4">{t(language, 'jobs.deleteJob') || 'Delete Job'}</h3>
+          <p className="text-gray-700">
+            {t(language, 'jobs.deleteJobConfirm') || 'Are you sure you want to delete this job? This action cannot be undone.'}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setDeleteConfirm(null)}
+              disabled={deleting}
+            >
+              {t(language, 'common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1 bg-red-600 hover:bg-red-700"
+              onClick={() => deleteConfirm && handleDeleteJob(deleteConfirm)}
+              disabled={deleting}
+            >
+              {deleting ? t(language, 'common.loading') || 'Deleting...' : t(language, 'common.delete') || 'Delete'}
+            </Button>
+          </div>
+        </div>
+        </Modal>
+      )}
     </div>
   );
 };

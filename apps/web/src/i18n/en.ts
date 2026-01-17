@@ -25,6 +25,8 @@ export const en = {
   common: {
     searchPlaceholder: 'Search marketplace, blogs, jobs...',
     loading: 'Loading...',
+    cancel: 'Cancel',
+    delete: 'Delete',
     aiBadge: 'AI Agronomist Available',
     aiTitle: 'Grow Better Coffee.',
     aiDescription: 'Ask about soil prep, diseases, or local weather impacts in your region.',
@@ -102,6 +104,8 @@ export const en = {
     noJobsYet: 'No jobs posted yet',
     createFirstJob: 'Create Your First Job',
     applicationCount: 'Applications',
+    deleteJob: 'Delete Job',
+    deleteJobConfirm: 'Are you sure you want to delete this job? This action cannot be undone.',
   },
   auth: {
     signIn: 'Sign In',

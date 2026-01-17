@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Briefcase, Phone, Mail, CheckCircle, User, Check, X, Trash2 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { jobService, Application, Job } from '@/services/job.service';
 import { t } from '@/i18n';
+import { Modal } from '@/components/common/Modal';
 
 interface JobDetailProps {
   jobId: string;
@@ -31,6 +32,8 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
   const [applying, setApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadJob();
@@ -125,6 +128,12 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
       return;
     }
 
+    // Check if job is active
+    if (job.active === false) {
+      setApplyError('This job is closed and no longer accepting applications.');
+      return;
+    }
+
     setApplying(true);
     setApplyError(null);
     setApplySuccess(false);
@@ -145,6 +154,22 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
       setApplyError(error.message || 'Failed to submit application. Please try again.');
     } finally {
       setApplying(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (!jobId) return;
+    setDeleting(true);
+    try {
+      await jobService.deleteJob(jobId);
+      // Navigate back to jobs list
+      handleBack();
+    } catch (error: any) {
+      console.error('Failed to delete job:', error);
+      alert(error.message || 'Failed to delete job. Please try again.');
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm(false);
     }
   };
 
@@ -173,7 +198,17 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
         <button onClick={handleBack} className="p-2 hover:bg-gray-100 rounded-xl">
           <ArrowLeft size={20} />
         </button>
-        <h2 className="text-lg font-black text-[#6F4E37]">{t(language, 'jobs.jobDetails')}</h2>
+        <h2 className="text-lg font-black text-[#6F4E37] flex-1">{t(language, 'jobs.jobDetails')}</h2>
+        {isJobCreator && (
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-600 hover:bg-red-50 px-3"
+            onClick={() => setDeleteConfirm(true)}
+            disabled={deleting}
+          >
+            <Trash2 size={16} />
+          </Button>
+        )}
       </div>
 
       <div className="p-6 space-y-6">
@@ -186,6 +221,9 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
               <div className="flex items-center gap-2 mb-2">
                 <h1 className="text-2xl font-black">{job.title}</h1>
                 <CheckCircle size={20} className="text-blue-500" fill="currentColor" />
+                {job.active === false && (
+                  <Badge variant="alert">Closed</Badge>
+                )}
               </div>
               <p className="text-lg text-[#3A7D44] font-bold mb-3">{job.farm}</p>
               <Badge>{job.type}</Badge>
@@ -381,14 +419,45 @@ export const JobDetail = ({ jobId, onBack, onApply }: JobDetailProps) => {
                 variant="primary" 
                 className="flex-1" 
                 onClick={handleApply}
-                disabled={applying || applySuccess}
+                disabled={applying || applySuccess || job.active === false}
               >
-                {applying ? t(language, 'common.loading') : applySuccess ? 'Applied ✓' : t(language, 'jobs.applyNow')}
+                {applying ? t(language, 'common.loading') : applySuccess ? 'Applied ✓' : job.active === false ? 'Job Closed' : t(language, 'jobs.applyNow')}
               </Button>
             </div>
           </>
         )}
       </div>
+
+      {deleteConfirm && (
+        <Modal
+          onClose={() => setDeleteConfirm(false)}
+        >
+        <div className="p-6 space-y-4">
+          <h3 className="text-xl font-black text-[#6F4E37] mb-4">{t(language, 'jobs.deleteJob') || 'Delete Job'}</h3>
+          <p className="text-gray-700">
+            {t(language, 'jobs.deleteJobConfirm') || 'Are you sure you want to delete this job? This action cannot be undone.'}
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setDeleteConfirm(false)}
+              disabled={deleting}
+            >
+              {t(language, 'common.cancel') || 'Cancel'}
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1 bg-red-600 hover:bg-red-700"
+              onClick={handleDeleteJob}
+              disabled={deleting}
+            >
+              {deleting ? t(language, 'common.loading') || 'Deleting...' : t(language, 'common.delete') || 'Delete'}
+            </Button>
+          </div>
+        </div>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -48,13 +48,14 @@ export interface JobListResponse {
 }
 
 export const jobService = {
-  async getJobs(filters?: { type?: string; location?: string; page?: number; limit?: number; createdBy?: string }): Promise<JobListResponse> {
+  async getJobs(filters?: { type?: string; location?: string; page?: number; limit?: number; createdBy?: string; includeInactive?: boolean }): Promise<JobListResponse> {
     const params = new URLSearchParams();
     if (filters?.type) params.append('type', filters.type);
     if (filters?.location) params.append('location', filters.location);
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.createdBy) params.append('createdBy', filters.createdBy);
+    if (filters?.includeInactive) params.append('includeInactive', 'true');
 
     const response = await fetch(`${API_BASE_URL}/jobs?${params.toString()}`);
     if (!response.ok) {
@@ -111,7 +112,7 @@ export const jobService = {
   },
 
   async getMyJobs(userId: string): Promise<Job[]> {
-    const result = await this.getJobs({ createdBy: userId, limit: 1000 });
+    const result = await this.getJobs({ createdBy: userId, limit: 1000, includeInactive: true });
     return result.jobs;
   },
 
@@ -156,6 +157,18 @@ export const jobService = {
 
     const application = await response.json();
     return { ...application, id: application._id };
+  },
+
+  async deleteJob(jobId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete job');
+    }
   }
 };
 
