@@ -15,7 +15,7 @@ import PradipKhanalImage from '@/assets/images/team/PradipKhanal.webp';
 
 const TEAM_MEMBERS = [
   { name: "Suraj Nepal", role: "Backend Developer", image: surajNepalImage },
-  { name: "Pradip Khanal", role: "Researcher", image: PradipKhanalImage },
+  { name: "Pradip Khanal", role: "Frontend Developer", image: PradipKhanalImage },
   { name: "Sarthak Bhattarai", role: "Social Media Manager", image: SarthakBhattaraiImage },
   { name: "Krrish Nyopane", role: "UI/UX Designer", image: KrrishNyopaneImage },
   { name: "Sachin Jha", role: "Graphic Designer", image: SachinJhaImage },

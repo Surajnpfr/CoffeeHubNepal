@@ -39,7 +39,7 @@ Our diverse team of developers, designers, and content creators:
 | **Supriya Khadka** | App Developer |
 | **Rajdip Joshi** | App Developer |
 | **Aastha Gaire** | Frontend Developer |
-| **Pradip Khanal** | Researcher |
+| **Pradip Khanal** | Frontend Developer |
 | **Aditya Man Shrestha** | Content Writer |
 
 ---
