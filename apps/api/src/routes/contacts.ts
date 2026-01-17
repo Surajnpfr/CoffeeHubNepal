@@ -154,11 +154,18 @@ router.delete('/:id', authenticate, requireAdminOrModerator, validateObjectId(),
 // Notification routes (authenticated users)
 router.get('/notifications', authenticate, async (req: AuthRequest, res) => {
   try {
-    const unreadOnly = req.query.unreadOnly === 'true';
-    const notifications = await getUserNotifications(req.userId!, unreadOnly);
+    if (!req.userId) {
+      return res.status(401).json({ error: 'UNAUTHORIZED' });
+    }
+    
+    const unreadOnly = req.query.unreadOnly === 'true' || req.query.unreadOnly === true;
+    const notifications = await getUserNotifications(req.userId, unreadOnly);
     return res.json({ notifications });
   } catch (error: any) {
     console.error('Get notifications error:', error);
+    if (error.message === 'Invalid user ID') {
+      return res.status(400).json({ error: 'INVALID_USER_ID' });
+    }
     return res.status(500).json({ error: 'FAILED_TO_FETCH_NOTIFICATIONS' });
   }
 });

@@ -28,8 +28,8 @@ const createJobSchema = z.object({
 });
 
 const createApplicationSchema = z.object({
-  applicantName: z.string().min(1),
-  applicantEmail: z.string().email(),
+  applicantName: z.string().min(1).optional(),
+  applicantEmail: z.string().email().optional(),
   applicantPhone: z.string().optional(),
   message: z.string().max(1000).optional()
 });
