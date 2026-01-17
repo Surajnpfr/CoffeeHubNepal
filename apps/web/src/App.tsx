@@ -18,7 +18,7 @@ const PROTECTED_SUB_PAGES = new Set([
   'create-listing', 'listing-detail',
   'notice-detail', 'create-notice',
   'job-detail', 'create-job',
-  'my-listings', 'my-jobs', 'certifications', 'settings'
+  'my-listings', 'my-jobs', 'my-applications', 'certifications', 'settings'
 ]);
 
 // Core pages - loaded immediately
@@ -55,6 +55,7 @@ const Contacts = lazy(() => import('./pages/admin/Contacts').then(m => ({ defaul
 const AdminMarketplace = lazy(() => import('./pages/admin/Marketplace').then(m => ({ default: m.Marketplace })));
 const MyListings = lazy(() => import('./pages/profile/MyListings').then(m => ({ default: m.MyListings })));
 const MyJobs = lazy(() => import('./pages/jobs/MyJobs').then(m => ({ default: m.MyJobs })));
+const MyApplications = lazy(() => import('./pages/jobs/MyApplications').then(m => ({ default: m.MyApplications })));
 const Certifications = lazy(() => import('./pages/profile/Certifications').then(m => ({ default: m.Certifications })));
 const Settings = lazy(() => import('./pages/profile/Settings').then(m => ({ default: m.Settings })));
 const AboutUs = lazy(() => import('./pages/about/AboutUs').then(m => ({ default: m.AboutUs })));
@@ -306,6 +307,8 @@ const AppContent = () => {
           return <MyListings />;
         case 'my-jobs':
           return <MyJobs />;
+        case 'my-applications':
+          return <MyApplications />;
         case 'certifications':
           return <Certifications />;
         case 'settings':

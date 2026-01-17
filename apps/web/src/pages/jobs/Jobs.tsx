@@ -57,13 +57,22 @@ export const Jobs = () => {
         </div>
         <div className="flex items-center gap-2">
           {isAuthenticated && (
-            <Button 
-              variant="outline" 
-              className="text-xs px-3"
-              onClick={() => navigate('my-jobs')}
-            >
-              <Briefcase size={14} /> {t(language, 'jobs.myJobs')}
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                className="text-xs px-3"
+                onClick={() => navigate('my-applications')}
+              >
+                <Briefcase size={14} /> {t(language, 'jobs.myApplications')}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="text-xs px-3"
+                onClick={() => navigate('my-jobs')}
+              >
+                <Briefcase size={14} /> {t(language, 'jobs.myJobs')}
+              </Button>
+            </>
           )}
           <Button 
             variant="outline" 

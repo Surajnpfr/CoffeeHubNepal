@@ -129,6 +129,23 @@ export const jobService = {
     return applications.map((app: Application) => ({ ...app, id: app._id }));
   },
 
+  async getMyApplications(): Promise<(Application & { job?: Job | null })[]> {
+    const response = await fetch(`${API_BASE_URL}/jobs/applications/my`, {
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch my applications');
+    }
+
+    const applications = await response.json();
+    return applications.map((app: any) => ({ 
+      ...app, 
+      id: app._id,
+      jobId: app.jobId?.toString() || app.jobId
+    }));
+  },
+
   async acceptApplication(jobId: string, applicationId: string): Promise<Application> {
     const response = await fetch(`${API_BASE_URL}/jobs/${jobId}/applications/${applicationId}`, {
       method: 'PUT',
