@@ -32,6 +32,8 @@ export const ne = {
     liveMarketPrices: 'प्रत्यक्ष बजार मूल्य',
     quickJobsTitle: 'रोजगार खोज्नुहोस्',
     quickJobsSubtitle: '१२ नयाँ अवसर',
+    quickJobsAvailable: 'उपलब्ध रोजगार',
+    quickJobsNone: 'कुनै रोजगार छैन',
     quickAnalyticsTitle: 'विश्लेषण',
     quickAnalyticsSubtitle: 'रिपोर्ट हेर्नुहोस्',
     weatherAlertTitle: 'मौसम सूचना: झड्का जोखिम',

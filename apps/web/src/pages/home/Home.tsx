@@ -16,6 +16,7 @@ export const Home = ({ onNavigate }: HomeProps) => {
   const { language, navigate } = useApp();
   const [prices, setPrices] = useState<Price[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [totalJobs, setTotalJobs] = useState<number>(0);
   const [pricesLoading, setPricesLoading] = useState(true);
   const [jobsLoading, setJobsLoading] = useState(true);
 
@@ -44,9 +45,12 @@ export const Home = ({ onNavigate }: HomeProps) => {
       const result = await jobService.getJobs({ limit: 6 });
       // Show only first 6 jobs on homepage
       setJobs(result.jobs.slice(0, 6));
+      // Store total job count for display
+      setTotalJobs(result.pagination?.total || 0);
     } catch (error) {
       console.error('Failed to load jobs:', error);
       setJobs([]);
+      setTotalJobs(0);
     } finally {
       setJobsLoading(false);
     }
@@ -160,7 +164,14 @@ export const Home = ({ onNavigate }: HomeProps) => {
         </div>
         <div>
           <h4 className="font-black text-sm">{t(language, 'home.quickJobsTitle')}</h4>
-          <p className="text-[10px] font-bold text-gray-400 uppercase">{t(language, 'home.quickJobsSubtitle')}</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase">
+            {jobsLoading 
+              ? t(language, 'common.loading') || 'Loading...'
+              : totalJobs > 0 
+                ? `${totalJobs} ${t(language, 'home.quickJobsAvailable')}`
+                : t(language, 'home.quickJobsNone')
+            }
+          </p>
         </div>
       </Card>
 

@@ -34,6 +34,8 @@ export const en = {
     liveMarketPrices: 'Live Market Prices',
     quickJobsTitle: 'Find Jobs',
     quickJobsSubtitle: '12 New Roles',
+    quickJobsAvailable: 'Available Jobs',
+    quickJobsNone: 'No Jobs Available',
     quickAnalyticsTitle: 'Analytics',
     quickAnalyticsSubtitle: 'View Reports',
     weatherAlertTitle: 'Weather Alert: Frost Hazard',
