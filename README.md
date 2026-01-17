@@ -35,7 +35,7 @@ Our diverse team of developers, designers, and content creators:
 | **Sachin Jha** | Graphic Designer |
 | **Mukesh Pandey** | Graphic Designer |
 | **Nawnit Paudel** | Security Expert |
-| **Supriya Khadka** | Reasearcher |
+| **Supriya Khadka** | Researcher |
 | **Pradip Khanal** | Frontend Developer |
 
 ---
