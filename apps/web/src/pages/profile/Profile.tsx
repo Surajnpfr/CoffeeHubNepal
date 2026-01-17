@@ -7,6 +7,8 @@ import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { blogService } from '@/services/blog.service';
 import { authService } from '@/services/auth.service';
+import { marketplaceService } from '@/services/marketplace.service';
+import { jobService } from '@/services/job.service';
 import { compressImage } from '@/utils/imageCompression';
 import { 
   Camera, 
@@ -32,8 +34,9 @@ export const Profile = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [userStats, setUserStats] = useState({
     activeAds: 0,
-    qaKarma: 0,
-    farmSize: 'N/A'
+    listings: 0,
+    jobsPosted: 0,
+    totalLikes: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -80,30 +83,40 @@ export const Profile = () => {
       try {
         setLoadingStats(true);
         
-        // Get user's blog posts count (Active Ads)
-        const blogResult = await blogService.getPosts({ 
-          author: user.mongoId, 
-          limit: 1000 // Get all posts to count
-        });
+        // Fetch all stats in parallel for better performance
+        const [blogResult, listingsResult, jobsResult] = await Promise.all([
+          // Get user's blog posts count (Active Ads)
+          blogService.getPosts({ 
+            author: user.mongoId, 
+            limit: 1000 // Get all posts to count
+          }),
+          // Get user's marketplace listings count
+          marketplaceService.getListings({ 
+            sellerId: user.mongoId,
+            limit: 1000 
+          }).catch(() => ({ products: [], pagination: { total: 0 } })),
+          // Get user's jobs posted count
+          jobService.getJobs({ 
+            createdBy: user.mongoId,
+            limit: 1000 
+          }).catch(() => ({ jobs: [], pagination: { total: 0 } }))
+        ]);
+
         const activeAds = blogResult.posts.length;
+        const listings = listingsResult.products?.length || listingsResult.pagination?.total || 0;
+        const jobsPosted = jobsResult.jobs?.length || jobsResult.pagination?.total || 0;
 
-        // Count user's comments across all blog posts (QA Karma)
-        let qaKarma = 0;
-        const allPosts = await blogService.getPosts({ limit: 1000 });
-        allPosts.posts.forEach(post => {
-          const userComments = post.comments.filter(
-            comment => comment.author === user.mongoId || comment.authorEmail === user.email
-          );
-          qaKarma += userComments.length;
+        // Count total likes received on user's blog posts
+        let totalLikes = 0;
+        blogResult.posts.forEach(post => {
+          totalLikes += post.likes?.length || 0;
         });
-
-        // Farm size - not stored yet, so use N/A or 0h
-        const farmSize = 'N/A';
 
         setUserStats({
           activeAds,
-          qaKarma,
-          farmSize
+          listings,
+          jobsPosted,
+          totalLikes
         });
       } catch (error) {
         console.error('Failed to fetch user stats:', error);
@@ -315,11 +328,12 @@ export const Profile = () => {
       </div>
     </div>
 
-    <div className="grid grid-cols-3 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
       {[
-        { label: "Active Ads", val: loadingStats ? "..." : userStats.activeAds.toString(), icon: Store },
-        { label: "QA Karma", val: loadingStats ? "..." : userStats.qaKarma.toString(), icon: MessageSquare },
-        { label: "Farm Size", val: loadingStats ? "..." : userStats.farmSize, icon: Leaf }
+        { label: "Blog Posts", val: loadingStats ? "..." : userStats.activeAds.toString(), icon: MessageSquare },
+        { label: "Listings", val: loadingStats ? "..." : userStats.listings.toString(), icon: Store },
+        { label: "Jobs Posted", val: loadingStats ? "..." : userStats.jobsPosted.toString(), icon: Briefcase },
+        { label: "Total Likes", val: loadingStats ? "..." : userStats.totalLikes.toString(), icon: Award }
       ].map((stat, i) => (
         <Card key={i} className="p-4 text-center">
           <stat.icon size={16} className="mx-auto mb-2 text-gray-300"/>
