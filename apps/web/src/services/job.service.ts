@@ -34,6 +34,7 @@ export interface Application {
   applicantPhone?: string;
   status: 'pending' | 'accepted' | 'rejected';
   appliedAt: string;
+  createdAt?: string; // For backward compatibility with backend
   message?: string;
 }
 

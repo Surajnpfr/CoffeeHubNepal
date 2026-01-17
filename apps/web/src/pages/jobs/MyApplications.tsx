@@ -114,7 +114,7 @@ export const MyApplications = () => {
                       <div className="flex items-center gap-2 mt-2">
                         {getStatusBadge(application.status)}
                         <span className="text-xs text-gray-500">
-                          {t(language, 'jobs.appliedOn')} {formatDate(application.appliedAt || application.createdAt)}
+                          {t(language, 'jobs.appliedOn')} {formatDate(application.appliedAt || application.createdAt || '')}
                         </span>
                       </div>
                     </div>
