@@ -15,7 +15,6 @@ import {
   CheckCircle, 
   Store, 
   MessageSquare, 
-  Leaf, 
   ShieldCheck, 
   Grip, 
   Briefcase,
