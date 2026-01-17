@@ -11,14 +11,13 @@ import { VerificationBanner } from './components/common/VerificationBanner';
 import { useMediaQuery } from './hooks/useMediaQuery';
 
 // Constants moved outside component for stable identity and performance
-const PROTECTED_PAGES = new Set(['market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events']);
+const PROTECTED_PAGES = new Set(['market', 'jobs', 'profile', 'notices', 'blog', 'prices']);
 const PUBLIC_PAGES = new Set(['about', 'contact', 'privacy', 'terms']);
 const PROTECTED_SUB_PAGES = new Set([
   'blog-detail', 'create-blog', 'edit-blog',
   'create-listing', 'listing-detail',
   'notice-detail', 'create-notice',
   'job-detail', 'create-job',
-  'event-detail',
   'my-listings', 'my-jobs', 'certifications', 'settings'
 ]);
 
@@ -41,9 +40,6 @@ const CreateNotice = lazy(() => import('./pages/notices/CreateNotice').then(m =>
 const JobDetail = lazy(() => import('./pages/jobs/JobDetail').then(m => ({ default: m.JobDetail })));
 const CreateJob = lazy(() => import('./pages/jobs/CreateJob').then(m => ({ default: m.CreateJob })));
 const PriceBoard = lazy(() => import('./pages/prices/PriceBoard').then(m => ({ default: m.PriceBoard })));
-const Events = lazy(() => import('./pages/events/Events').then(m => ({ default: m.Events })));
-const EventDetail = lazy(() => import('./pages/events/EventDetail').then(m => ({ default: m.EventDetail })));
-const CreateEvent = lazy(() => import('./pages/events/CreateEvent').then(m => ({ default: m.CreateEvent })));
 const Login = lazy(() => import('./pages/auth/Login').then(m => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/auth/Register').then(m => ({ default: m.Register })));
 const FarmerVerification = lazy(() => import('./pages/auth/FarmerVerification').then(m => ({ default: m.FarmerVerification })));
@@ -160,9 +156,6 @@ const AppContent = () => {
       case 'blog':
         navigate('create-blog');
         break;
-      case 'event':
-        navigate('create-event');
-        break;
     }
   };
 
@@ -181,10 +174,6 @@ const AppContent = () => {
       case 'job-detail':
       case 'create-job':
         setCurrentPage('jobs');
-        break;
-      case 'event-detail':
-      case 'create-event':
-        setCurrentPage('events');
         break;
       case 'my-listings':
       case 'my-jobs':
@@ -313,12 +302,6 @@ const AppContent = () => {
         }
         case 'create-job':
           return <CreateJob onBack={handleBack} />;
-        case 'event-detail': {
-          const eventId = getStoredId('eventDetailId');
-          return eventId ? <EventDetail eventId={eventId} onBack={handleBack} /> : null;
-        }
-        case 'create-event':
-          return <CreateEvent onBack={handleBack} />;
         case 'my-listings':
           return <MyListings />;
         case 'my-jobs':
@@ -389,7 +372,6 @@ const AppContent = () => {
                 {currentPage === 'notices' && isAuthenticated && <Notices />}
                 {currentPage === 'blog' && isAuthenticated && <BlogList />}
                 {currentPage === 'prices' && isAuthenticated && <PriceBoard />}
-                {currentPage === 'events' && isAuthenticated && <Events />}
                 {currentPage === 'about' && <AboutUs />}
                 {currentPage === 'contact' && <ContactUs />}
                 {currentPage === 'privacy' && <PrivacyPolicy />}
@@ -441,7 +423,6 @@ const AppContent = () => {
             {currentPage === 'notices' && isAuthenticated && <Notices />}
             {currentPage === 'blog' && isAuthenticated && <BlogList />}
             {currentPage === 'prices' && isAuthenticated && <PriceBoard />}
-            {currentPage === 'events' && isAuthenticated && <Events />}
             {currentPage === 'about' && <AboutUs />}
             {currentPage === 'contact' && <ContactUs />}
             {currentPage === 'privacy' && <PrivacyPolicy />}

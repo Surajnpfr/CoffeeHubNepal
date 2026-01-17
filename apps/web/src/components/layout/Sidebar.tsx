@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, Briefcase } from 'lucide-react'; // Keep these for now - no exact matches
+import { DollarSign, Briefcase } from 'lucide-react'; // Keep these for now - no exact matches
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/common/Button';
@@ -26,12 +26,11 @@ export const Sidebar = ({ onMenuOpen }: SidebarProps) => {
     { id: 'notices', iconName: 'Sidebar_Bell_20', label: t(language, 'nav.alerts') },
     { id: 'jobs', icon: Briefcase, label: t(language, 'nav.jobs') }, // Using lucide for now
     { id: 'prices', icon: DollarSign, label: t(language, 'nav.prices') }, // Using lucide for now
-    { id: 'events', icon: Calendar, label: t(language, 'nav.events') }, // Using lucide for now
     { id: 'profile', iconName: 'Sidebar_User_20', label: t(language, 'nav.profile') }
   ];
 
   const handlePageClick = (page: string) => {
-    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices'];
     if (!isAuthenticated && protectedPages.includes(page)) {
       setCurrentPage('home');
       setSubPage('login');

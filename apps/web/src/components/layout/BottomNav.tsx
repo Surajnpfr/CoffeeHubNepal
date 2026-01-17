@@ -1,7 +1,7 @@
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Calendar, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { t } from '@/i18n';
 import { Icon } from '@/components/common/Icon';
 
@@ -25,7 +25,6 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
     { id: 'home', iconName: 'BottomNav_Home_22', label: t(language, 'nav.home') },
     { id: 'blog', iconName: 'BottomNav_MessageSquare_22', label: t(language, 'nav.blog') },
     { id: 'market', iconName: 'BottomNav_Store_22', label: t(language, 'nav.marketShort') },
-    { id: 'events', icon: Calendar, label: t(language, 'nav.events') },
     { id: 'notices', iconName: 'BottomNav_Bell_22', label: t(language, 'nav.alerts') },
     { id: 'profile', iconName: 'BottomNav_User_22', label: t(language, 'nav.profile') }
   ];

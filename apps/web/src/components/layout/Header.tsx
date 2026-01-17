@@ -10,7 +10,7 @@ export const Header = () => {
   const { unreadCount } = useNotifications();
 
   const handlePageClick = (page: string) => {
-    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
+    const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices'];
     if (!isAuthenticated && protectedPages.includes(page)) {
       setCurrentPage('home');
       setSubPage('login');
