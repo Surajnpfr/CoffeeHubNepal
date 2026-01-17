@@ -31,16 +31,12 @@ Our diverse team of developers, designers, and content creators:
 |------|------|
 | **Suraj Nepal** | Backend Developer |
 | **Sarthak Bhattarai** | Social Media Manager |
-| **Siddhant Giri** | Frontend Developer |
 | **Krrish Nyopane** | UI/UX Designer |
 | **Sachin Jha** | Graphic Designer |
 | **Mukesh Pandey** | Graphic Designer |
 | **Nawnit Paudel** | Security Expert |
-| **Supriya Khadka** | App Developer |
-| **Rajdip Joshi** | App Developer |
-| **Aastha Gaire** | Frontend Developer |
-| **Pradip Khanal** | Researcher |
-| **Aditya Man Shrestha** | Content Writer |
+| **Supriya Khadka** | Reasearcher |
+| **Pradip Khanal** | Frontend Developer |
 
 ---
 
@@ -56,7 +52,13 @@ Our diverse team of developers, designers, and content creators:
 - **Lucide React** - Icon library
 
 **State Management:**
-- React Context API (`AppContext`, `AuthContext`)
+- React Context API with optimized context splitting:
+  - `AppContext` - Backward-compatible wrapper
+  - `NavigationContext` - Navigation state (currentPage, subPage, selectedId, navigate)
+  - `UIContext` - UI state (isMenuOpen)
+  - `SettingsContext` - Settings state (language, userRole)
+  - `AuthContext` - Authentication state (user, isAuthenticated)
+- Memoized context values and functions for performance
 - Local Storage for persistence
 - Session Storage for temporary data
 
@@ -108,7 +110,9 @@ Our diverse team of developers, designers, and content creators:
 - Email verification link-based signup (no OTP)
 - JWT-based authentication
 - Role-based access control (Farmer, Roaster, Trader, Exporter, Expert, Admin, Moderator)
-- Account verification system for all roles
+- **Visitor Role System**: New users sign up with their selected role but start as unverified "visitors"
+- **Account Verification**: Visitors can browse all content but cannot post, comment, like, or create listings until admin verification
+- Admin and moderator roles are automatically verified
 - Password reset via email links
 
 #### 2. **Marketplace**
@@ -124,14 +128,20 @@ Our diverse team of developers, designers, and content creators:
 
 #### 4. **Job Board**
 - Post and browse job opportunities
+- **Real-time job data** displayed on home page
+- Dynamic job count in Quick Access cards
 - Application management
 - Role-specific job filtering
+- Only verified users can post jobs or apply
 
 #### 5. **Blog & Community**
 - Create, edit, and manage blog posts
-- Comments and likes
+- **Author role and verification status** displayed on blog posts
+- Comments and likes (verified users only)
 - Category and tag filtering
 - Content moderation
+- Blog reporting system
+- Only verified users can create posts, comment, or like
 
 #### 6. **Official Alerts (Notices)**
 - Admin/moderator-only posting
@@ -139,14 +149,21 @@ Our diverse team of developers, designers, and content creators:
 - Priority levels (High, Medium, Low)
 - Type classification (Training, Govt, Event, Alert, Other)
 
-#### 7. **Admin Panel**
+#### 7. **Notification System**
+- Real-time unread notification count tracking
+- Red dot indicators in Header, DesktopHeader, and BottomNav
+- Notifications automatically marked as read when viewing Notices page
+- Auto-refresh every 30 seconds for live updates
+- User notifications for listing removals, approvals, and other events
+
+#### 8. **Admin Panel**
 - User management and verification
 - Content moderation (reports, reviews)
 - Price management
 - Contact message handling
 - Statistics dashboard
 
-#### 8. **User Profile**
+#### 9. **User Profile**
 - Profile customization with avatar upload
 - Account verification submission
 - My listings and jobs management
@@ -168,7 +185,7 @@ apps/web/
 │   │   └── ...
 │   │
 │   ├── components/          # Reusable UI components
-│   │   ├── common/          # Shared components (Button, Card, Input, etc.)
+│   │   ├── common/          # Shared components (Button, Card, Input, VerificationBanner, etc.)
 │   │   ├── cards/           # Card components (BlogCard, JobCard, etc.)
 │   │   └── layout/          # Layout components (Header, Sidebar, BottomNav)
 │   │
@@ -179,7 +196,9 @@ apps/web/
 │   ├── hooks/               # Custom React hooks
 │   │   ├── useCountUp.ts    # Animated counter hook
 │   │   ├── useMediaQuery.ts # Responsive breakpoint hook
-│   │   └── useRole.ts       # Role management hook
+│   │   ├── useRole.ts       # Role management hook
+│   │   ├── useVerification.ts # User verification status hook
+│   │   └── useNotifications.ts # Notification count and management hook
 │   │
 │   ├── i18n/                # Internationalization
 │   │   ├── en.ts           # English translations
@@ -211,6 +230,7 @@ apps/web/
 │   │   ├── job.service.ts
 │   │   ├── marketplace.service.ts
 │   │   ├── notice.service.ts
+│   │   ├── notification.service.ts # User notifications service
 │   │   ├── price.service.ts
 │   │   └── report.service.ts
 │   │
@@ -433,6 +453,10 @@ const title = t(language, 'about.title');
 - **Bundle Size**: Tree-shaking, minimal dependencies
 - **Caching**: API responses cached where appropriate
 - **Responsive Images**: Aspect ratio containers prevent layout shift
+- **Context Optimization**: Split monolithic AppContext into focused contexts (NavigationContext, UIContext, SettingsContext) to reduce unnecessary re-renders
+- **Memoization**: Context values and functions memoized with `useMemo` and `useCallback`
+- **Render Optimization**: Moved all `setState` calls from render to `useEffect` hooks to prevent render loops
+- **Efficient Lookups**: Converted constant arrays to `Set` objects for O(1) lookups
 
 ---
 
