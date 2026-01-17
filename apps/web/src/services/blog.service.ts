@@ -6,6 +6,8 @@ export interface PopulatedAuthor {
   _id: string;
   name?: string;
   avatar?: string;
+  role?: string;
+  verified?: boolean;
 }
 
 export interface BlogPost {
@@ -47,6 +49,22 @@ export const getAuthorId = (post: BlogPost): string => {
     return post.author._id;
   }
   return post.author as string;
+};
+
+// Helper to get author role (from populated data)
+export const getAuthorRole = (post: BlogPost): string | null => {
+  if (typeof post.author === 'object' && post.author?.role) {
+    return post.author.role;
+  }
+  return null;
+};
+
+// Helper to get author verification status (from populated data)
+export const getAuthorVerified = (post: BlogPost): boolean => {
+  if (typeof post.author === 'object' && post.author?.verified !== undefined) {
+    return post.author.verified === true;
+  }
+  return false;
 };
 
 export interface Comment {

@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Edit, Trash2, Calendar, Tag, Flag } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar, Tag, Flag, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { LikeButton } from '@/components/blog/LikeButton';
 import { CommentSection } from '@/components/blog/CommentSection';
 import { ReportModal } from '@/components/blog/ReportModal';
-import { blogService, BlogPost, getAuthorName, getAuthorAvatar, getAuthorId } from '@/services/blog.service';
+import { blogService, BlogPost, getAuthorName, getAuthorAvatar, getAuthorId, getAuthorRole, getAuthorVerified } from '@/services/blog.service';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { useVerification } from '@/hooks/useVerification';
@@ -22,6 +22,22 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { isVisitor } = useVerification();
   const [post, setPost] = useState<BlogPost | null>(null);
+
+  // Role label mapping
+  const roleLabels: { [key: string]: string } = {
+    farmer: 'Farmer',
+    roaster: 'Roaster',
+    trader: 'Trader',
+    exporter: 'Exporter',
+    expert: 'Expert',
+    admin: 'Admin',
+    moderator: 'Moderator'
+  };
+
+  const getRoleLabel = (role: string | null): string => {
+    if (!role) return '';
+    return roleLabels[role] || role.charAt(0).toUpperCase() + role.slice(1);
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
@@ -243,11 +259,23 @@ export const BlogDetail = ({ postId, onBack }: BlogDetailProps) => {
                 )}
               </div>
               <div>
-                <p className="text-sm font-black text-gray-700">{getAuthorName(post)}</p>
-                <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                  <Calendar size={10} />
-                  {formatDate(post.createdAt)}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-black text-gray-700">{getAuthorName(post)}</p>
+                  {getAuthorVerified(post) && (
+                    <CheckCircle className="text-blue-500" size={14} fill="currentColor" />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {getAuthorRole(post) && (
+                    <Badge variant="primary" className="text-[9px] px-1.5 py-0.5">
+                      {getRoleLabel(getAuthorRole(post))}
+                    </Badge>
+                  )}
+                  <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                    <Calendar size={10} />
+                    {formatDate(post.createdAt)}
+                  </p>
+                </div>
               </div>
             </div>
             <Badge variant="primary">{post.category}</Badge>

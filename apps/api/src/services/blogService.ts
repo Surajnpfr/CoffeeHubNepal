@@ -96,11 +96,11 @@ export const getPosts = async (filters?: {
   }
 
   // Use .lean() for better performance - returns plain JS objects instead of Mongoose documents
-  // Populate author to get current user data (name, avatar)
+  // Populate author to get current user data (name, avatar, role, verified)
   const [posts, total] = await Promise.all([
     BlogPost.find(query)
       .select('title content author authorName authorEmail category tags images likes comments published createdAt updatedAt')
-      .populate('author', 'name avatar')
+      .populate('author', 'name avatar role verified')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -132,10 +132,10 @@ export const getPosts = async (filters?: {
 
 export const getPostById = async (id: string): Promise<any> => {
   // Use .lean() for read operations - much faster, returns plain JS object
-  // Populate author to get current user data (name, avatar)
+  // Populate author to get current user data (name, avatar, role, verified)
   const post = await BlogPost.findById(id)
     .select('title content author authorName authorEmail category tags images likes comments published createdAt updatedAt')
-    .populate('author', 'name avatar role')
+    .populate('author', 'name avatar role verified')
     .lean();
   
   if (!post) {

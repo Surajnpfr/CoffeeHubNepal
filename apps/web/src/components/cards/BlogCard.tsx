@@ -1,8 +1,8 @@
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
-import { Heart, MessageSquare, Calendar } from 'lucide-react';
+import { Heart, MessageSquare, Calendar, CheckCircle } from 'lucide-react';
 import { formatDate } from '@/utils/formatDate';
-import { BlogPost, getAuthorName, getAuthorAvatar } from '@/services/blog.service';
+import { BlogPost, getAuthorName, getAuthorAvatar, getAuthorRole, getAuthorVerified } from '@/services/blog.service';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -19,6 +19,24 @@ export const BlogCard = ({ post, onCardClick, onLike, currentUserId }: BlogCardP
   // Get current author info (populated data takes priority over stored data)
   const authorName = getAuthorName(post);
   const authorAvatar = getAuthorAvatar(post);
+  const authorRole = getAuthorRole(post);
+  const authorVerified = getAuthorVerified(post);
+
+  // Role label mapping
+  const roleLabels: { [key: string]: string } = {
+    farmer: 'Farmer',
+    roaster: 'Roaster',
+    trader: 'Trader',
+    exporter: 'Exporter',
+    expert: 'Expert',
+    admin: 'Admin',
+    moderator: 'Moderator'
+  };
+
+  const getRoleLabel = (role: string | null): string => {
+    if (!role) return '';
+    return roleLabels[role] || role.charAt(0).toUpperCase() + role.slice(1);
+  };
   
   // Truncate content for preview
   const preview = post.content.length > 150 
@@ -51,11 +69,23 @@ export const BlogCard = ({ post, onCardClick, onLike, currentUserId }: BlogCardP
             )}
           </div>
           <div>
-            <p className="text-xs font-black text-gray-700">{authorName}</p>
-            <p className="text-[10px] text-gray-400 flex items-center gap-1">
-              <Calendar size={10} />
-              {formatDate(post.createdAt)}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-black text-gray-700">{authorName}</p>
+              {authorVerified && (
+                <CheckCircle className="text-blue-500" size={11} fill="currentColor" />
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {authorRole && (
+                <Badge variant="primary" className="text-[8px] px-1 py-0">
+                  {getRoleLabel(authorRole)}
+                </Badge>
+              )}
+              <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                <Calendar size={10} />
+                {formatDate(post.createdAt)}
+              </p>
+            </div>
           </div>
         </div>
         <Badge variant="primary" className="text-[10px]">{post.category}</Badge>
