@@ -1,11 +1,13 @@
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Icon } from '@/components/common/Icon';
+import { useNotifications } from '@/hooks/useNotifications';
 import logoImage from '@/assets/images/team/coffeelogo.webp';
 
 export const Header = () => {
   const { setCurrentPage, setSubPage, language, setLanguage } = useApp();
   const { isAuthenticated } = useAuth();
+  const { unreadCount } = useNotifications();
 
   const handlePageClick = (page: string) => {
     const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
@@ -69,7 +71,9 @@ export const Header = () => {
             className="p-2.5 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark relative transition-all hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm"
           >
             <Icon name="Header_Bell_20" size={20} />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+            )}
           </button>
         )}
         {!isAuthenticated && (

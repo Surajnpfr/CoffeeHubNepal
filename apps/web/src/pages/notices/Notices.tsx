@@ -4,9 +4,11 @@ import { Button } from '@/components/common/Button';
 import { NoticeCard } from '@/components/cards/NoticeCard';
 import { useApp } from '@/context/AppContext';
 import { noticeService, type Notice } from '@/services/notice.service';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export const Notices = () => {
   const { navigate } = useApp();
+  const { markAllAsRead } = useNotifications();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +26,9 @@ export const Notices = () => {
     };
 
     loadNotices();
-  }, []);
+    // Mark all notifications as read when viewing the notices page
+    markAllAsRead();
+  }, [markAllAsRead]);
   
   const handleNoticeClick = (id: string) => {
     // Store underlying blog post ID and use subPage navigation (similar to blog detail)

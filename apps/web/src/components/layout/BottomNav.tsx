@@ -1,5 +1,6 @@
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
+import { useNotifications } from '@/hooks/useNotifications';
 import { t } from '@/i18n';
 import { Icon } from '@/components/common/Icon';
 
@@ -12,6 +13,7 @@ interface BottomNavProps {
 export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavProps) => {
   const { language } = useApp();
   const { isAuthenticated } = useAuth();
+  const { unreadCount } = useNotifications();
   
   const tabs = [
     { id: 'home', iconName: 'BottomNav_Home_22', label: t(language, 'nav.home') },
@@ -57,9 +59,12 @@ export const BottomNav = ({ currentPage, onPageChange, onMenuOpen }: BottomNavPr
             <button 
               key={tab.id}
               onClick={() => onPageChange(tab.id)}
-              className={`flex flex-col items-center gap-1 transition-all ${currentPage === tab.id ? 'text-coffee-dark scale-110' : 'text-coffee-dark/60 hover:text-coffee-dark'}`}
+              className={`relative flex flex-col items-center gap-1 transition-all ${currentPage === tab.id ? 'text-coffee-dark scale-110' : 'text-coffee-dark/60 hover:text-coffee-dark'}`}
             >
               <Icon name={tab.iconName} size={22} />
+              {tab.id === 'notices' && unreadCount > 0 && (
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 border border-coffee-beige rounded-full"></span>
+              )}
               <span className="text-[9px] font-body font-semibold uppercase tracking-tighter">{tab.label}</span>
             </button>
           );

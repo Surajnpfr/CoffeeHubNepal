@@ -1,11 +1,13 @@
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Icon } from '@/components/common/Icon';
+import { useNotifications } from '@/hooks/useNotifications';
 import { t } from '@/i18n';
 
 export const DesktopHeader = () => {
   const { setCurrentPage, setSubPage, language, setLanguage, navigate } = useApp();
   const { user, isAuthenticated } = useAuth();
+  const { unreadCount } = useNotifications();
 
   const handlePageClick = (page: string) => {
     const protectedPages = ['home', 'market', 'jobs', 'profile', 'notices', 'blog', 'prices', 'events'];
@@ -87,7 +89,9 @@ export const DesktopHeader = () => {
                 className="relative p-2 sm:p-3 bg-white/50 backdrop-blur-sm rounded-md border border-coffee-dark/10 text-coffee-dark hover:bg-white/70 hover:border-coffee-dark/30 hover:shadow-sm transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <Icon name="DesktopHeader_Bell_20" size={20} />
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white/70 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white/70 rounded-full"></span>
+                )}
               </button>
 
               <button 
