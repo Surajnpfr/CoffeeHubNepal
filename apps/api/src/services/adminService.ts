@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 import { User, UserDocument, UserRole } from '../models/User.js';
 import { escapeRegex } from '../utils/sanitize.js';
+import {
+  getPendingVerificationRequests,
+  getVerificationRequests,
+  getVerificationRequestByUserId,
+  updateVerificationStatus
+} from './verificationService.js';
+import { VerificationRequest } from '../models/VerificationRequest.js';
 
 export interface UserFilters {
   role?: UserRole;
@@ -236,21 +243,14 @@ export const deleteUser = async (
   }
 };
 
+/** Return verification requests with status pending (one per user who submitted). */
 export const getPendingVerifications = async () => {
-  // Return users with verified: false, null, or undefined (not verified)
-  // This ensures we catch all unverified users regardless of how the field was set
-  const users = await User.find({
-    $or: [
-      { verified: false },
-      { verified: { $exists: false } },
-      { verified: null }
-    ]
-  })
-    .select('-passwordHash -failedLogins -lockUntil')
-    .sort({ createdAt: -1 })
-    .lean();
+  return getPendingVerificationRequests();
+};
 
-  return users;
+/** Return verification requests with optional status filter (for admin list tabs). */
+export const getVerifications = async (status?: 'pending' | 'approved' | 'rejected') => {
+  return getVerificationRequests(status);
 };
 
 export const verifyUser = async (
@@ -269,6 +269,8 @@ export const verifyUser = async (
   user.verified = true;
   const savedUser = await user.save();
 
+  await updateVerificationStatus(userId, 'approved', adminId);
+
   console.log(`[Admin] User verified: ${user.email} (${userId}) by admin ${adminId}`);
   
   return savedUser;
@@ -284,10 +286,8 @@ export const rejectVerification = async (
     throw new Error('USER_NOT_FOUND');
   }
 
-  // For rejection, we could either:
-  // 1. Keep verified: false (do nothing)
-  // 2. Add a rejection reason field
-  // For now, we'll just log it
+  await updateVerificationStatus(userId, 'rejected', adminId, reason);
+
   console.log(`[Admin] Verification rejected for user: ${user.email} (${userId}) by admin ${adminId}. Reason: ${reason || 'No reason provided'}`);
   
   return user;
@@ -306,13 +306,7 @@ export const getUserStats = async () => {
   const [totalUsers, verifiedUsers, pendingVerifications, pendingRoleChanges] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ verified: true }),
-    User.countDocuments({
-      $or: [
-        { verified: false },
-        { verified: { $exists: false } },
-        { verified: null }
-      ]
-    }),
+    VerificationRequest.countDocuments({ status: 'pending' }),
     User.countDocuments({ roleChangeRequest: { $exists: true } })
   ]);
 

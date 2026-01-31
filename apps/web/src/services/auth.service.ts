@@ -673,6 +673,62 @@ export const authService = {
       }
       throw new Error('Network error. Please check if the API server is running.');
     }
+  },
+
+  /** Get my verification request (one per user). Returns null if none. */
+  async getVerificationRequest(): Promise<{
+    request: {
+      _id: string;
+      status: 'pending' | 'approved' | 'rejected';
+      organizationName: string;
+      roleDescription: string;
+      location: string;
+      yearsOfExperience: string;
+      certification?: string;
+      documentUrls: string[];
+      submittedAt: string;
+      rejectionReason?: string;
+    } | null;
+  }> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not authenticated');
+    const response = await fetch(`${API_BASE_URL}/auth/verification`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) {
+      if (response.status === 401) throw new Error('Not authenticated');
+      throw new Error('Failed to fetch verification request');
+    }
+    return response.json();
+  },
+
+  /** Create or update verification request (one per user; editable until verified). documentUrls: base64 data URLs. */
+  async submitVerificationRequest(data: {
+    organizationName: string;
+    roleDescription: string;
+    location: string;
+    yearsOfExperience: string;
+    certification?: string;
+    documentUrls: string[];
+  }) {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('Not authenticated');
+    const response = await fetch(`${API_BASE_URL}/auth/verification`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      if (response.status === 400 && result.error === 'ALREADY_VERIFIED') {
+        throw new Error(result.message || 'Your account is already verified.');
+      }
+      throw new Error(result.message || result.error || 'Failed to submit verification request');
+    }
+    return result;
   }
 };
 

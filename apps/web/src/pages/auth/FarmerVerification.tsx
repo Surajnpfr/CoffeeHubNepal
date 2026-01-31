@@ -1,12 +1,26 @@
-import { useState, useRef } from 'react';
-import { ArrowLeft, Upload, FileText, CheckCircle } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Card } from '@/components/common/Card';
+import { authService } from '@/services/auth.service';
 
 interface FarmerVerificationProps {
   onBack?: () => void;
   onSuccess?: () => void;
+}
+
+const MAX_DOCUMENTS = 10;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 }
 
 export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProps) => {
@@ -19,41 +33,62 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
     documents: [] as File[]
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingRequest, setIsLoadingRequest] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  /** One request per user: pending (editable), approved (show success), rejected (editable again) */
+  const [requestStatus, setRequestStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { request } = await authService.getVerificationRequest();
+        if (cancelled) return;
+        if (request) {
+          setRequestStatus(request.status);
+          setRejectionReason(request.rejectionReason);
+          if (request.status === 'pending' || request.status === 'rejected') {
+            setFormData(prev => ({
+              ...prev,
+              organizationName: request.organizationName || '',
+              roleDescription: request.roleDescription || '',
+              location: request.location || '',
+              yearsOfExperience: request.yearsOfExperience || '',
+              certification: request.certification || ''
+            }));
+          }
+        } else {
+          setRequestStatus(null);
+        }
+      } catch {
+        if (!cancelled) setRequestStatus(null);
+      } finally {
+        if (!cancelled) setIsLoadingRequest(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const maxSizeBytes = 5 * 1024 * 1024; // 5MB
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-      const validFiles: File[] = [];
-      for (const file of Array.from(files)) {
-        if (file.size > maxSizeBytes) {
-          // Skip oversized files
-          // You could replace this with a toast or inline error UI if desired
-          console.warn(`Skipping file ${file.name}: larger than 5MB`);
-          continue;
-        }
-        if (!allowedTypes.includes(file.type)) {
-          console.warn(`Skipping file ${file.name}: unsupported type ${file.type}`);
-          continue;
-        }
-        validFiles.push(file);
-      }
-
-      if (validFiles.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          documents: [...prev.documents, ...validFiles]
-        }));
-      }
+    if (!files) return;
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      if (formData.documents.length + validFiles.length >= MAX_DOCUMENTS) break;
+      if (file.size > MAX_FILE_SIZE) continue;
+      if (!ALLOWED_TYPES.includes(file.type)) continue;
+      validFiles.push(file);
     }
-    // Reset input so same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (validFiles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        documents: [...prev.documents, ...validFiles].slice(0, MAX_DOCUMENTS)
+      }));
     }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -72,25 +107,79 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-
     const files = e.dataTransfer.files;
-    if (files) {
-      setFormData({
-        ...formData,
-        documents: [...formData.documents, ...Array.from(files)]
-      });
+    if (!files) return;
+    const validFiles: File[] = [];
+    for (const file of Array.from(files)) {
+      if (formData.documents.length + validFiles.length >= MAX_DOCUMENTS) break;
+      if (file.size > MAX_FILE_SIZE) continue;
+      if (!ALLOWED_TYPES.includes(file.type)) continue;
+      validFiles.push(file);
+    }
+    if (validFiles.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        documents: [...prev.documents, ...validFiles].slice(0, MAX_DOCUMENTS)
+      }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     setIsLoading(true);
-    // Simulate verification submission
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const documentUrls: string[] = [];
+      for (const file of formData.documents) {
+        const dataUrl = await fileToDataUrl(file);
+        documentUrls.push(dataUrl);
+      }
+      await authService.submitVerificationRequest({
+        organizationName: formData.organizationName.trim(),
+        roleDescription: formData.roleDescription.trim(),
+        location: formData.location.trim(),
+        yearsOfExperience: formData.yearsOfExperience.trim(),
+        certification: formData.certification.trim() || undefined,
+        documentUrls
+      });
+      setRequestStatus('pending');
       onSuccess?.();
-    }, 1500);
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to submit. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isLoadingRequest) {
+    return (
+      <div className="min-h-screen bg-[#F8F5F2] p-6 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#6F4E37] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (requestStatus === 'approved') {
+    return (
+      <div className="min-h-screen bg-[#F8F5F2] p-6 pb-32">
+        {onBack && (
+          <button onClick={onBack} className="mb-6 flex items-center gap-2 text-gray-600">
+            <ArrowLeft size={20} />
+            <span className="text-sm font-bold">Back</span>
+          </button>
+        )}
+        <div className="max-w-2xl mx-auto mt-8 text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="text-green-600" size={40} />
+          </div>
+          <h1 className="text-2xl font-black text-[#6F4E37] mb-2">Account verified</h1>
+          <p className="text-sm text-gray-600">Your account is already verified. You can use all features.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const canEdit = requestStatus === null || requestStatus === 'pending' || requestStatus === 'rejected';
 
   return (
     <div className="min-h-screen bg-[#F8F5F2] p-6 pb-32">
@@ -108,12 +197,31 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
           </div>
           <h1 className="text-3xl font-black text-[#6F4E37] mb-2">Account Verification</h1>
           <p className="text-sm text-gray-600">
-            Tell us more about how you participate in the coffee ecosystem so we can verify your account.
+            {requestStatus === 'rejected'
+              ? 'You can update your details and resubmit for review.'
+              : 'Tell us more about how you participate in the coffee ecosystem so we can verify your account. You can edit your submission until it is reviewed.'}
           </p>
         </div>
 
+        {requestStatus === 'rejected' && rejectionReason && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+            <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-sm font-bold text-amber-800">Previous submission was not approved</p>
+              <p className="text-xs text-amber-700 mt-1">{rejectionReason}</p>
+            </div>
+          </div>
+        )}
+
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {submitError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+                <AlertCircle size={18} />
+                {submitError}
+              </div>
+            )}
+
             <Input
               type="text"
               label="Organization / Business Name"
@@ -121,6 +229,7 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
               value={formData.organizationName}
               onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
               required
+              disabled={!canEdit}
             />
 
             <Input
@@ -130,6 +239,7 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
               value={formData.roleDescription}
               onChange={(e) => setFormData({ ...formData, roleDescription: e.target.value })}
               required
+              disabled={!canEdit}
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -140,8 +250,8 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
+                disabled={!canEdit}
               />
-
               <Input
                 type="text"
                 label="Years of Experience"
@@ -149,6 +259,7 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
                 value={formData.yearsOfExperience}
                 onChange={(e) => setFormData({ ...formData, yearsOfExperience: e.target.value })}
                 required
+                disabled={!canEdit}
               />
             </div>
 
@@ -158,21 +269,20 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
               placeholder="e.g. Organic, Fair Trade, training programs"
               value={formData.certification}
               onChange={(e) => setFormData({ ...formData, certification: e.target.value })}
+              disabled={!canEdit}
             />
 
             <div>
               <label className="block text-xs font-black text-gray-600 mb-3 uppercase tracking-tight">
-                Upload Documents
+                Upload Documents (max {MAX_DOCUMENTS}, 5MB each)
               </label>
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${
-                  isDragging
-                    ? 'border-[#6F4E37] bg-[#6F4E37]/5'
-                    : 'border-[#EBE3D5] bg-gray-50'
-                }`}
+                  isDragging ? 'border-[#6F4E37] bg-[#6F4E37]/5' : 'border-[#EBE3D5] bg-gray-50'
+                } ${!canEdit ? 'opacity-60 pointer-events-none' : ''}`}
               >
                 <input
                   ref={fileInputRef}
@@ -191,13 +301,13 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
                   <>
                     <Upload className="mx-auto mb-3 text-gray-400" size={32} />
                     <p className="text-xs font-black text-gray-500 mb-2">Upload land ownership, ID, business registration, or certificates</p>
-                    <p className="text-xs text-gray-400 mb-3">Drag and drop files here or use the button below</p>
+                    <p className="text-xs text-gray-400 mb-3">Drag and drop or use the button below (JPEG, PNG, WebP)</p>
                     <Button
                       variant="outline"
                       type="button"
                       className="text-xs"
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={isLoading}
+                      disabled={isLoading || !canEdit}
                     >
                       Choose Files
                     </Button>
@@ -213,16 +323,18 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
                         <FileText size={16} className="text-[#6F4E37]" />
                         <span className="text-xs font-bold text-gray-700">{file.name}</span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newDocs = formData.documents.filter((_, i) => i !== idx);
-                          setFormData({ ...formData, documents: newDocs });
-                        }}
-                        className="text-red-500 text-xs font-black"
-                      >
-                        Remove
-                      </button>
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newDocs = formData.documents.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, documents: newDocs });
+                          }}
+                          className="text-red-500 text-xs font-black"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -231,23 +343,23 @@ export const FarmerVerification = ({ onBack, onSuccess }: FarmerVerificationProp
 
             <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
               <p className="text-xs text-blue-800 leading-relaxed">
-                <strong className="font-black">Note:</strong> Verification typically takes 2-3 business days. 
-                You'll receive a notification once your application is reviewed.
+                <strong className="font-black">Note:</strong> You have one verification request. You can edit and resubmit until an admin reviews it. Verification typically takes 2–3 business days.
               </p>
             </div>
 
-            <Button 
-              type="submit" 
-              variant="primary" 
-              className="w-full py-4"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Submitting...' : 'Submit for Verification'}
-            </Button>
+            {canEdit && (
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full py-4"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Submitting...' : requestStatus === 'pending' ? 'Update submission' : 'Submit for Verification'}
+              </Button>
+            )}
           </form>
         </Card>
       </div>
     </div>
   );
 };
-

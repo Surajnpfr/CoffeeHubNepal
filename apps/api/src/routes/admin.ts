@@ -10,11 +10,13 @@ import {
   updateUserRole,
   deleteUser,
   getPendingVerifications,
+  getVerifications,
   getPendingRoleChangeRequests,
   getUserStats,
   verifyUser,
   rejectVerification
 } from '../services/adminService.js';
+import { getVerificationRequestByUserId } from '../services/verificationService.js';
 import {
   createReport,
   getReports,
@@ -180,7 +182,7 @@ router.get('/stats', requireAdminOrModerator, async (req: AuthRequest, res) => {
   }
 });
 
-// Get pending verifications (admin/moderator)
+// Get pending verifications (admin/moderator) - verification requests with status pending (one per user)
 router.get('/pending-verifications', requireAdminOrModerator, async (req: AuthRequest, res) => {
   try {
     const verifications = await getPendingVerifications();
@@ -188,6 +190,33 @@ router.get('/pending-verifications', requireAdminOrModerator, async (req: AuthRe
   } catch (error) {
     console.error('Get verifications error:', error);
     return res.status(500).json({ error: 'FAILED_TO_FETCH_VERIFICATIONS' });
+  }
+});
+
+// Get verification requests with optional status filter (admin/moderator)
+router.get('/verifications', requireAdminOrModerator, async (req: AuthRequest, res) => {
+  try {
+    const status = req.query.status as 'pending' | 'approved' | 'rejected' | undefined;
+    const filter = status && status !== 'all' ? status : undefined;
+    const verifications = await getVerifications(filter);
+    return res.json(verifications);
+  } catch (error) {
+    console.error('Get verifications error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_FETCH_VERIFICATIONS' });
+  }
+});
+
+// Get full verification request for a user including document images (admin/moderator)
+router.get('/users/:id/verification', validateObjectId(), requireAdminOrModerator, async (req: AuthRequest, res) => {
+  try {
+    const request = await getVerificationRequestByUserId(req.params.id);
+    if (!request) {
+      return res.status(404).json({ error: 'VERIFICATION_NOT_FOUND', message: 'No verification request found for this user' });
+    }
+    return res.json(request);
+  } catch (error) {
+    console.error('Get user verification error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_FETCH_VERIFICATION' });
   }
 });
 

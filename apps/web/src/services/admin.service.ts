@@ -19,6 +19,24 @@ export interface User {
   updatedAt: string;
 }
 
+export interface VerificationRequestWithUser {
+  _id: string;
+  user: User;
+  status: 'pending' | 'approved' | 'rejected';
+  organizationName: string;
+  roleDescription: string;
+  location: string;
+  yearsOfExperience: string;
+  certification?: string;
+  documentUrls?: string[];
+  submittedAt: string;
+  rejectionReason?: string;
+}
+
+export interface VerificationRequestDetail extends VerificationRequestWithUser {
+  documentUrls: string[];
+}
+
 export interface UserListResponse {
   users: User[];
   pagination: {
@@ -145,13 +163,42 @@ export const adminService = {
     return response.json();
   },
 
-  async getPendingVerifications(): Promise<User[]> {
+  /** Pending verification requests (one per user who submitted). Each has user populated. */
+  async getPendingVerifications(): Promise<VerificationRequestWithUser[]> {
     const response = await fetch(`${API_BASE_URL}/admin/pending-verifications`, {
       headers: getAuthHeaders()
     });
 
     if (!response.ok) {
       throw new Error('Failed to fetch pending verifications');
+    }
+
+    return response.json();
+  },
+
+  /** Verification requests with optional status filter (pending | approved | all). */
+  async getVerifications(status?: 'pending' | 'approved' | 'all'): Promise<VerificationRequestWithUser[]> {
+    const params = status && status !== 'all' ? `?status=${status}` : '';
+    const response = await fetch(`${API_BASE_URL}/admin/verifications${params}`, {
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch verifications');
+    }
+
+    return response.json();
+  },
+
+  /** Full verification request for a user (including document images). */
+  async getUserVerification(userId: string): Promise<VerificationRequestDetail | null> {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/verification`, {
+      headers: getAuthHeaders()
+    });
+
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error('Failed to fetch verification details');
     }
 
     return response.json();

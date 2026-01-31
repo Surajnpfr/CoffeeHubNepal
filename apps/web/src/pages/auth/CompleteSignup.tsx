@@ -74,8 +74,8 @@ export const CompleteSignup = ({ onBack, onSuccess }: CompleteSignupProps) => {
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Invalid phone number';
+    } else if (!/^[0-9]{10}$/.test(formData.phone)) {
+      newErrors.phone = 'Enter exactly 10 digits';
     }
 
     if (!formData.location.trim()) {
@@ -255,8 +255,12 @@ export const CompleteSignup = ({ onBack, onSuccess }: CompleteSignupProps) => {
                 label="Phone Number"
                 placeholder="9800000000"
                 value={formData.phone}
+                maxLength={10}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                autoComplete="tel"
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                   setFormData({ ...formData, phone: value });
                   if (errors.phone) setErrors({ ...errors, phone: '' });
                 }}

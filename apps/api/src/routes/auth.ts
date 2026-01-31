@@ -8,6 +8,7 @@ import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { isPasswordStrong, login, signup, completeSignup, requestPasswordReset, resetPassword } from '../services/authService.js';
 import { sendSignupOTP, verifySignupOTP, resendSignupOTP } from '../services/otpService.js';
 import { requestSignupVerificationLink } from '../services/emailVerificationService.js';
+import { getMyVerificationRequest, createOrUpdateVerificationRequest } from '../services/verificationService.js';
 import { User } from '../models/User.js';
 
 const router = Router();
@@ -63,6 +64,15 @@ export const completeSignupSchema = z.object({
   phone: z.string().max(20).optional(),
   location: z.string().max(200).optional(),
   email: z.string().email().optional() // Optional - email is extracted from token, but allow it for compatibility
+});
+
+export const verificationRequestSchema = z.object({
+  organizationName: z.string().min(1).max(200).trim(),
+  roleDescription: z.string().min(1).max(500).trim(),
+  location: z.string().min(1).max(200).trim(),
+  yearsOfExperience: z.string().min(1).max(50).trim(),
+  certification: z.string().max(500).trim().optional(),
+  documentUrls: z.array(z.string().max(3_000_000)).max(10).default([]) // base64 data URLs, max 10 docs
 });
 
 // Request signup verification link (new email link flow)
@@ -657,6 +667,76 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
   } catch (error: any) {
     console.error('Get current user error:', error);
     return res.status(500).json({ error: 'FAILED_TO_FETCH_USER', message: 'Failed to fetch user' });
+  }
+});
+
+// Get my verification request (one per user; for editing until verified)
+router.get('/verification', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: 'User not authenticated' });
+    }
+    const request = await getMyVerificationRequest(userId);
+    if (!request) {
+      return res.json({ request: null });
+    }
+    return res.json({
+      request: {
+        _id: (request as any)._id?.toString(),
+        status: request.status,
+        organizationName: request.organizationName,
+        roleDescription: request.roleDescription,
+        location: request.location,
+        yearsOfExperience: request.yearsOfExperience,
+        certification: request.certification,
+        documentUrls: request.documentUrls,
+        submittedAt: request.submittedAt,
+        rejectionReason: request.rejectionReason
+      }
+    });
+  } catch (error: any) {
+    console.error('Get verification request error:', error);
+    return res.status(500).json({ error: 'FAILED_TO_FETCH_VERIFICATION', message: 'Failed to fetch verification request' });
+  }
+});
+
+// Create or update verification request (one per user; user can edit until verified)
+router.put('/verification', authenticate, validate(verificationRequestSchema), async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: 'User not authenticated' });
+    }
+    const data = req.body as z.infer<typeof verificationRequestSchema>;
+    const request = await createOrUpdateVerificationRequest(userId, {
+      organizationName: data.organizationName,
+      roleDescription: data.roleDescription,
+      location: data.location,
+      yearsOfExperience: data.yearsOfExperience,
+      certification: data.certification,
+      documentUrls: data.documentUrls ?? []
+    });
+    return res.json({
+      request: {
+        _id: request._id.toString(),
+        status: request.status,
+        organizationName: request.organizationName,
+        roleDescription: request.roleDescription,
+        location: request.location,
+        yearsOfExperience: request.yearsOfExperience,
+        certification: request.certification,
+        documentUrls: request.documentUrls,
+        submittedAt: request.submittedAt
+      }
+    });
+  } catch (error: any) {
+    const err = error?.message || String(error);
+    if (err === 'ALREADY_VERIFIED') {
+      return res.status(400).json({ error: 'ALREADY_VERIFIED', message: 'Your account is already verified.' });
+    }
+    console.error('Create/update verification request error:', error);
+    return res.status(500).json({ error: 'VERIFICATION_SUBMIT_FAILED', message: 'Failed to submit verification request' });
   }
 });
 

@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'heading': ['Playfair Display', 'serif'],
-        'body': ['Poppins', 'sans-serif'],
+        'heading': ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        'body': ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         coffee: {
