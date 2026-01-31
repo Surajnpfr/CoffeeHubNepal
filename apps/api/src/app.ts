@@ -126,36 +126,36 @@ export const createApp = () => {
   // Add caching headers for GET requests (public data only)
   app.use((req, res, next) => {
     // Only cache GET requests for public data - NOT admin endpoints
-    if (req.method === 'GET' && !req.path.startsWith('/auth') && !req.path.startsWith('/admin')) {
+    if (req.method === 'GET' && !req.path.startsWith('/api/auth') && !req.path.startsWith('/api/admin')) {
       // Cache public data for 5 minutes
-      if (req.path.startsWith('/blog') || req.path.startsWith('/jobs') || 
-          req.path.startsWith('/products') || req.path.startsWith('/prices') ||
-          req.path.startsWith('/events')) {
+      if (req.path.startsWith('/api/blog') || req.path.startsWith('/api/jobs') || 
+          req.path.startsWith('/api/products') || req.path.startsWith('/api/prices') ||
+          req.path.startsWith('/api/events')) {
         res.set('Cache-Control', 'public, max-age=300'); // 5 minutes
       }
       // Cache health check for 1 minute
-      if (req.path === '/health') {
+      if (req.path === '/api/health') {
         res.set('Cache-Control', 'public, max-age=60'); // 1 minute
       }
     }
     // Admin endpoints should never be publicly cached
-    if (req.path.startsWith('/admin')) {
+    if (req.path.startsWith('/api/admin')) {
       res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     }
     next();
   });
 
-  // API routes (must come before static file serving)
-  app.use('/auth', authRoutes);
-  app.use('/blog', blogRoutes);
-  app.use('/admin', adminRoutes);
-  app.use('/jobs', jobRoutes);
-  app.use('/products', productRoutes);
-  app.use('/prices', priceRoutes);
-  app.use('/contacts', contactRoutes);
-  app.use('/events', eventRoutes);
+  // API routes under /api so client routes (e.g. /jobs, /about) can be served as index.html on refresh
+  app.use('/api/auth', authRoutes);
+  app.use('/api/blog', blogRoutes);
+  app.use('/api/admin', adminRoutes);
+  app.use('/api/jobs', jobRoutes);
+  app.use('/api/products', productRoutes);
+  app.use('/api/prices', priceRoutes);
+  app.use('/api/contacts', contactRoutes);
+  app.use('/api/events', eventRoutes);
 
-  app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+  app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
   
   // Swagger API documentation (only in development or if enabled)
   if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_SWAGGER === 'true') {

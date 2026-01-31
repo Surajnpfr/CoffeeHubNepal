@@ -11,13 +11,13 @@ const getApiBaseUrl = () => {
     return envUrl;
   }
   
-  // Production: use relative URLs (same domain deployment on Heroku)
+  // Production: use /api so client routes (/jobs, /about, etc.) are served index.html on refresh
   if (import.meta.env.PROD) {
-    return '';
+    return '/api';
   }
   
-  // Default to localhost for development
-  return 'http://localhost:4000';
+  // Default to localhost for development (API is mounted at /api)
+  return 'http://localhost:4000/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
