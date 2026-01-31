@@ -11,6 +11,7 @@ export const PrivacyPolicy = () => {
     if (isAuthenticated) {
       setCurrentPage('home');
     } else {
+      setCurrentPage('home');
       setSubPage(null);
     }
   };

@@ -24,7 +24,7 @@ const ROLE_INFO: { [key in UserRole]: { label: string; icon: string; description
 };
 
 export const CompleteSignup = ({ onBack, onSuccess }: CompleteSignupProps) => {
-  const { navigate, setUserRole, setSubPage } = useApp();
+  const { navigate, setUserRole, setSubPage, setCurrentPage } = useApp();
   
   // Get token from URL
   const [token, setToken] = useState<string>('');
@@ -399,11 +399,11 @@ export const CompleteSignup = ({ onBack, onSuccess }: CompleteSignupProps) => {
                   <div className="flex-1">
                     <p className="text-xs text-gray-700">
                       I agree to the{' '}
-                      <button type="button" onClick={() => navigate('terms')} className="font-black text-[#6F4E37] underline">
+                      <button type="button" onClick={() => { setCurrentPage('terms'); setSubPage(null); }} className="font-black text-[#6F4E37] underline">
                         Terms of Service
                       </button>
                       {' '}and{' '}
-                      <button type="button" onClick={() => navigate('privacy')} className="font-black text-[#6F4E37] underline">
+                      <button type="button" onClick={() => { setCurrentPage('privacy'); setSubPage(null); }} className="font-black text-[#6F4E37] underline">
                         Privacy Policy
                       </button>
                     </p>

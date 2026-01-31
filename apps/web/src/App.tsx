@@ -205,15 +205,16 @@ const AppContent = () => {
     );
   }
 
-  // Public pages (accessible without login) - only: about, contact, privacy, terms
-  if (!isAuthenticated && subPage && PUBLIC_PAGES.has(subPage)) {
+  // Public pages (accessible without login) - about, contact, privacy, terms (from URL currentPage or subPage)
+  const onPublicPage = !isAuthenticated && (PUBLIC_PAGES.has(currentPage) || (subPage && PUBLIC_PAGES.has(subPage)));
+  if (onPublicPage) {
     return (
       <div className="min-h-screen bg-[#F8F5F2]">
         <Suspense fallback={<PageLoader />}>
-          {subPage === 'about' && <AboutUs />}
-          {subPage === 'contact' && <ContactUs />}
-          {subPage === 'privacy' && <PrivacyPolicy />}
-          {subPage === 'terms' && <TermsOfService />}
+          {(currentPage === 'about' || subPage === 'about') && <AboutUs />}
+          {(currentPage === 'contact' || subPage === 'contact') && <ContactUs />}
+          {(currentPage === 'privacy' || subPage === 'privacy') && <PrivacyPolicy />}
+          {(currentPage === 'terms' || subPage === 'terms') && <TermsOfService />}
         </Suspense>
       </div>
     );

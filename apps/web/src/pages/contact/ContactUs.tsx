@@ -30,6 +30,7 @@ export const ContactUs = () => {
     if (isAuthenticated) {
       setCurrentPage('home');
     } else {
+      setCurrentPage('home');
       setSubPage(null);
     }
   };
@@ -300,14 +301,14 @@ export const ContactUs = () => {
                 </button>
                 <span className="text-white/50 mx-2">•</span>
                 <button 
-                  onClick={() => navigate('privacy')}
+                  onClick={() => { setCurrentPage('privacy'); setSubPage(null); }}
                   className="text-sm text-white/90 hover:text-white underline"
                 >
                   {t(language, 'nav.privacy')}
                 </button>
                 <span className="text-white/50 mx-2">•</span>
                 <button 
-                  onClick={() => navigate('terms')}
+                  onClick={() => { setCurrentPage('terms'); setSubPage(null); }}
                   className="text-sm text-white/90 hover:text-white underline"
                 >
                   {t(language, 'nav.terms')}

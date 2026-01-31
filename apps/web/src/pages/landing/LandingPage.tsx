@@ -10,7 +10,7 @@ import coffeeImage from '@/assets/images/team/coffee.webp';
 import farmersHandshakeImage from '@/assets/images/team/farmers-handshake.webp';
 
 export const LandingPage = () => {
-  const { navigate } = useApp();
+  const { navigate, setCurrentPage, setSubPage } = useApp();
   const { isAuthenticated } = useAuth();
   
   // Animated counters for stats
@@ -440,15 +440,15 @@ export const LandingPage = () => {
             <div>
               <h4 className="font-heading font-semibold text-sm mb-4 text-coffee-dark">Company</h4>
               <ul className="space-y-2 text-xs font-body text-coffee-dark/70">
-                <li><button onClick={() => navigate('about')} className="hover:text-coffee-dark transition-colors">About Us</button></li>
-                <li><button onClick={() => navigate('contact')} className="hover:text-coffee-dark transition-colors">Contact</button></li>
+                <li><button onClick={() => { setCurrentPage('about'); setSubPage(null); }} className="hover:text-coffee-dark transition-colors">About Us</button></li>
+                <li><button onClick={() => { setCurrentPage('contact'); setSubPage(null); }} className="hover:text-coffee-dark transition-colors">Contact</button></li>
               </ul>
             </div>
             <div>
               <h4 className="font-heading font-semibold text-sm mb-4 text-coffee-dark">Legal</h4>
               <ul className="space-y-2 text-xs font-body text-coffee-dark/70">
-                <li><button onClick={() => navigate('privacy')} className="hover:text-coffee-dark transition-colors">Privacy Policy</button></li>
-                <li><button onClick={() => navigate('terms')} className="hover:text-coffee-dark transition-colors">Terms of Service</button></li>
+                <li><button onClick={() => { setCurrentPage('privacy'); setSubPage(null); }} className="hover:text-coffee-dark transition-colors">Privacy Policy</button></li>
+                <li><button onClick={() => { setCurrentPage('terms'); setSubPage(null); }} className="hover:text-coffee-dark transition-colors">Terms of Service</button></li>
               </ul>
             </div>
           </div>

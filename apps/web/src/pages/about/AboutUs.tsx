@@ -32,6 +32,7 @@ export const AboutUs = () => {
     if (isAuthenticated) {
       setCurrentPage('home');
     } else {
+      setCurrentPage('home');
       setSubPage(null);
     }
   };

@@ -11,6 +11,7 @@ export const TermsOfService = () => {
     if (isAuthenticated) {
       setCurrentPage('home');
     } else {
+      setCurrentPage('home');
       setSubPage(null);
     }
   };
