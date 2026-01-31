@@ -196,8 +196,9 @@ router.get('/pending-verifications', requireAdminOrModerator, async (req: AuthRe
 // Get verification requests with optional status filter (admin/moderator)
 router.get('/verifications', requireAdminOrModerator, async (req: AuthRequest, res) => {
   try {
-    const status = req.query.status as 'pending' | 'approved' | 'rejected' | undefined;
-    const filter = status && status !== 'all' ? status : undefined;
+    const status = req.query.status as string | undefined;
+    const filter =
+      status === 'pending' || status === 'approved' || status === 'rejected' ? status : undefined;
     const verifications = await getVerifications(filter);
     return res.json(verifications);
   } catch (error) {
