@@ -74,7 +74,7 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
-  const { currentPage, setCurrentPage, subPage, setSubPage, selectedId, setSelectedId, isMenuOpen, setIsMenuOpen, navigate, setUserRole, language } = useApp();
+  const { currentPage, setCurrentPage, subPage, setSubPage, selectedId, setSelectedId, isMenuOpen, setIsMenuOpen, navigate, setUserRole, setReplaceNext, language } = useApp();
   const { user, isAuthenticated, isLoading } = useAuth();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
@@ -90,24 +90,27 @@ const AppContent = () => {
     if (!isLoading && !isAuthenticated) {
       // Redirect if trying to access protected page (home is handled separately - shows landing page)
       if (PROTECTED_PAGES.has(currentPage) && !subPage) {
+        setReplaceNext(true); // Replace URL so back button doesn't return to protected page
         setCurrentPage('home');
         setSubPage('login');
       }
     }
-  }, [isAuthenticated, isLoading, currentPage, subPage, setCurrentPage, setSubPage]);
+  }, [isAuthenticated, isLoading, currentPage, subPage, setCurrentPage, setSubPage, setReplaceNext]);
 
   // Redirect unauthenticated users from protected sub-pages (Task A: moved to useEffect)
   useEffect(() => {
     if (!isLoading && !isAuthenticated && subPage && PROTECTED_SUB_PAGES.has(subPage)) {
+      setReplaceNext(true);
       setCurrentPage('home');
       setSubPage('login');
     }
-  }, [isAuthenticated, isLoading, subPage, setCurrentPage, setSubPage]);
+  }, [isAuthenticated, isLoading, subPage, setCurrentPage, setSubPage, setReplaceNext]);
 
   // Redirect non-admin/moderator users from admin pages (Task A: moved to useEffect)
   useEffect(() => {
     if (currentPage === 'admin' && !isLoading) {
       if (!isAuthenticated) {
+        setReplaceNext(true);
         setCurrentPage('home');
         setSubPage('login');
       } else {
