@@ -5,7 +5,7 @@
 **CoffeeHubNepal** is Nepal's premier digital platform connecting coffee farmers, roasters, traders, exporters, and enthusiasts. The platform empowers Nepal's coffee community through technology, knowledge sharing, and trusted connections, fostering fair trade and sustainable growth in the coffee industry.
 
 ### Mission
-To create a unified platform that connects coffee farmers, roasters, traders, and enthusiasts across Nepal, fostering knowledge exchange, fair trade, and sustainable growth in the coffee industry.
+To create a unified platform that connects coffee farmers, traders, and enthusiasts across Nepal, fostering knowledge exchange, fair trade, and sustainable growth in the coffee industry.
 
 ### Vision
 To become Nepal's leading digital ecosystem for coffee, where every farmer has access to markets, knowledge, and opportunities to thrive in the global coffee industry.
