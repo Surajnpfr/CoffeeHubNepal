@@ -30,13 +30,11 @@ Our diverse team of developers, designers, and content creators:
 | Name | Role |
 |------|------|
 | **Suraj Nepal** | Backend Developer |
-| **Sarthak Bhattarai** | Social Media Manager |
 | **Krrish Nyopane** | UI/UX Designer |
 | **Sachin Jha** | Graphic Designer |
 | **Mukesh Pandey** | Graphic Designer |
 | **Nawnit Paudel** | Security Expert |
-| **Supriya Khadka** | Researcher |
-| **Pradip Khanal** | Frontend Developer |
+
 
 ---
 
